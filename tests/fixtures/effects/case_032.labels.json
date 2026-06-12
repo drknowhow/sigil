@@ -1,0 +1,8 @@
+{
+  "cache_path": [
+    "pure"
+  ],
+  "read_cache": [
+    "!fs"
+  ]
+}

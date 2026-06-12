@@ -1,0 +1,17 @@
+__pycache__/
+*.pyc
+.pytest_cache/
+*.egg-info/
+build/
+out/
+node_modules/
+.sigil/
+examples/new-module/build/
+firstuse/.store_b/
+firstuse/in.json
+firstuse/sample/pricing.py
+firstuse/sample/test_triple.py
+.coverage
+.hypothesis/
+.ruff_cache/
+.write_test

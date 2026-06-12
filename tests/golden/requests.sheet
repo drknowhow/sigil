@@ -1,0 +1,377 @@
+; digest sheet — tests/fixtures/oss/requests/__init__.py  (Tier 1+2 mechanical lift)
+#85ae check_compatibility(urllib3_version str, chardet_version str | None, charset_normalizer_version str | None) -> None !io
+#1d2b _check_cryptography(cryptography_version str) -> None !io
+; context cost: full source ≈1480 tok · digest sheet ≈47 tok · 31× smaller (chars/4 estimate)
+; '?' marks static guesses — Tier 2 over-approximates, never trusts.
+
+; digest sheet — tests/fixtures/oss/requests/__version__.py  (Tier 1+2 mechanical lift)
+; context cost: full source ≈108 tok · digest sheet ≈1 tok · 108× smaller (chars/4 estimate)
+; '?' marks static guesses — Tier 2 over-approximates, never trusts.
+
+; digest sheet — tests/fixtures/oss/requests/_internal_utils.py  (Tier 1+2 mechanical lift)
+#8a38 to_native_string(string str | bytes, encoding str) -> str pure?
+#726e unicode_is_ascii(u_string str) -> bool pure?
+; context cost: full source ≈385 tok · digest sheet ≈30 tok · 13× smaller (chars/4 estimate)
+; '?' marks static guesses — Tier 2 over-approximates, never trusts.
+
+; digest sheet — tests/fixtures/oss/requests/_types.py  (Tier 1+2 mechanical lift)
+#af02 SupportsRead{} rec
+#af17 SupportsRead.read(self, length int) -> _T_co pure?
+#94b7 SupportsItems{} rec
+#9f92 SupportsItems.items(self) -> Iterable[tuple[_KT_co, _VT_co]] pure?
+#dc5e is_prepared(request PreparedRequest) -> TypeIs[_ValidatedRequest] pure?
+; context cost: full source ≈1459 tok · digest sheet ≈64 tok · 23× smaller (chars/4 estimate)
+; '?' marks static guesses — Tier 2 over-approximates, never trusts.
+
+; digest sheet — tests/fixtures/oss/requests/adapters.py  (Tier 1+2 mechanical lift)
+#ba89 _urllib3_request_context(request PreparedRequest, verify bool | str | None, client_cert tuple[str, str] | str | None, poolmanager PoolManager) -> tuple[dict[str, Any], dict[str, Any]] !fs !unsafe?
+#174d BaseAdapter{} rec
+#9fbe BaseAdapter.__init__(self) -> None pure?
+#4a5e BaseAdapter.send(self, request PreparedRequest, stream bool, timeout _t.TimeoutType, verify _t.VerifyType, cert _t.CertType, proxies dict[str, str] | None) -> Response pure?
+#4e3a BaseAdapter.close(self) -> None pure?
+#b295 HTTPAdapter{__attrs__, max_retries, config, proxy_manager, _pool_connections, _pool_maxsize, _pool_block, poolmanager} rec
+#288f HTTPAdapter.__init__(self, pool_connections int, pool_maxsize int, max_retries int | Retry, pool_block bool) -> None !unsafe?
+#aa04 HTTPAdapter.__getstate__(self) -> dict[str, Any] pure?
+#22d8 HTTPAdapter.__setstate__(self, state dict[str, Any]) -> None !mut !unsafe?
+#51dc HTTPAdapter.init_poolmanager(self, connections int, maxsize int, block bool, **pool_kwargs) -> None !unsafe?
+#9a84 HTTPAdapter.proxy_manager_for(self, proxy str, **proxy_kwargs) -> Any !unsafe?
+#5c82 HTTPAdapter.cert_verify(self, conn Any, url str, verify _t.VerifyType, cert _t.CertType) -> None !fs
+#059e HTTPAdapter.build_response(self, req PreparedRequest, resp Any) -> Response !unsafe?
+#233a HTTPAdapter.build_connection_pool_key_attributes(self, request PreparedRequest, verify _t.VerifyType, cert _t.CertType) -> tuple[dict[str, Any], dict[str, Any]] !fs !unsafe?
+#f149 HTTPAdapter.get_connection_with_tls_context(self, request PreparedRequest, verify _t.VerifyType, proxies dict[str, str] | None, cert _t.CertType) -> HTTPConnectionPool !fs !unsafe?
+#d26c HTTPAdapter.get_connection(self, url str, proxies dict[str, str] | None) -> HTTPConnectionPool !io !unsafe?
+#1bbd HTTPAdapter.close(self) -> None !unsafe?
+#055a HTTPAdapter.request_url(self, request PreparedRequest, proxies dict[str, str] | None) -> str !unsafe?
+#db1b HTTPAdapter.add_headers(self, request PreparedRequest, **kwargs) -> None pure?
+#c732 HTTPAdapter.proxy_headers(self, proxy str) -> dict[str, str] !unsafe?
+#324d HTTPAdapter.send(self, request PreparedRequest, stream bool, timeout _t.TimeoutType, verify _t.VerifyType, cert _t.CertType, proxies dict[str, str] | None) -> Response !fs !unsafe?
+; context cost: full source ≈7016 tok · digest sheet ≈570 tok · 12× smaller (chars/4 estimate)
+; '?' marks static guesses — Tier 2 over-approximates, never trusts.
+
+; digest sheet — tests/fixtures/oss/requests/api.py  (Tier 1+2 mechanical lift)
+#bb84 request(method str, url _t.UriType, **kwargs) -> Response !unsafe?
+#6a24 get(url _t.UriType, params _t.ParamsType, **kwargs) -> Response !unsafe?
+#12e1 options(url _t.UriType, **kwargs) -> Response !unsafe?
+#4cbd head(url _t.UriType, **kwargs) -> Response !unsafe?
+#27e8 post(url _t.UriType, data _t.DataType, json _t.JsonType, **kwargs) -> Response !unsafe?
+#4962 put(url _t.UriType, data _t.DataType, **kwargs) -> Response !unsafe?
+#bd85 patch(url _t.UriType, data _t.DataType, **kwargs) -> Response !unsafe?
+#731e delete(url _t.UriType, **kwargs) -> Response !unsafe?
+; context cost: full source ≈1788 tok · digest sheet ≈144 tok · 12× smaller (chars/4 estimate)
+; '?' marks static guesses — Tier 2 over-approximates, never trusts.
+
+; digest sheet — tests/fixtures/oss/requests/auth.py  (Tier 1+2 mechanical lift)
+#8d57 _basic_auth_str(username bytes | str, password bytes | str) -> str !io !unsafe?
+#258f AuthBase{} rec
+#4f0d AuthBase.__call__(self, r PreparedRequest) -> PreparedRequest pure?
+#95d4 HTTPBasicAuth{username, password} rec
+#8422 HTTPBasicAuth.__init__(self, username str, password str) -> None pure?
+#57c3 HTTPBasicAuth.__init__(self, username bytes, password bytes) -> None pure?
+#2421 HTTPBasicAuth.__init__(self, username bytes | str, password bytes | str) -> None pure?
+#87e8 HTTPBasicAuth.__eq__(self, other object) -> bool pure?
+#fb19 HTTPBasicAuth.__ne__(self, other Any) -> bool pure?
+#2302 HTTPBasicAuth.__call__(self, r PreparedRequest) -> PreparedRequest !io !unsafe?
+#ca07 HTTPProxyAuth{} rec
+#acbd HTTPProxyAuth.__call__(self, r PreparedRequest) -> PreparedRequest !io !unsafe?
+#7a88 HTTPDigestAuth{username, password, _thread_local, last_nonce, nonce_count, chal, pos, num_401_calls} rec
+#8422 HTTPDigestAuth.__init__(self, username str, password str) -> None !unsafe
+#57c3 HTTPDigestAuth.__init__(self, username bytes, password bytes) -> None !unsafe
+#54df HTTPDigestAuth.__init__(self, username bytes | str, password bytes | str) -> None !unsafe
+#1649 HTTPDigestAuth.init_per_thread_state(self) -> None pure?
+#1cec HTTPDigestAuth.build_digest_header(self, method str, url str) -> str | None !clock !rand !unsafe?
+#cdc0 HTTPDigestAuth.handle_redirect(self, r Response, **kwargs) -> None pure?
+#2aab HTTPDigestAuth.handle_401(self, r Response, **kwargs) -> Response !clock !rand !unsafe?
+#15bf HTTPDigestAuth.__call__(self, r PreparedRequest) -> PreparedRequest !clock !rand !unsafe?
+#87e8 HTTPDigestAuth.__eq__(self, other object) -> bool pure?
+#fb19 HTTPDigestAuth.__ne__(self, other Any) -> bool pure?
+; context cost: full source ≈3058 tok · digest sheet ≈430 tok · 7× smaller (chars/4 estimate)
+; '?' marks static guesses — Tier 2 over-approximates, never trusts.
+
+; digest sheet — tests/fixtures/oss/requests/certs.py  (Tier 1+2 mechanical lift)
+; context cost: full source ≈107 tok · digest sheet ≈1 tok · 107× smaller (chars/4 estimate)
+; '?' marks static guesses — Tier 2 over-approximates, never trusts.
+
+; digest sheet — tests/fixtures/oss/requests/compat.py  (Tier 1+2 mechanical lift)
+#04c1 _resolve_char_detection() -> ModuleType | None !unsafe
+; context cost: full source ≈616 tok · digest sheet ≈15 tok · 41× smaller (chars/4 estimate)
+; '?' marks static guesses — Tier 2 over-approximates, never trusts.
+
+; digest sheet — tests/fixtures/oss/requests/cookies.py  (Tier 1+2 mechanical lift)
+#e8ed MockRequest{type} rec
+#4d9f MockRequest.__init__(self, request PreparedRequest) -> None !unsafe?
+#6639 MockRequest.get_type(self) -> str pure?
+#5d5a MockRequest.get_host(self) -> str !unsafe?
+#821a MockRequest.get_origin_req_host(self) -> str !unsafe?
+#31b4 MockRequest.get_full_url(self) -> str !unsafe?
+#8192 MockRequest.is_unverifiable(self) -> bool pure?
+#9325 MockRequest.has_header(self, name str) -> bool pure?
+#19f3 MockRequest.get_header(self, name str, default str | None) -> str | None pure?
+#faad MockRequest.add_header(self, key str, val str) -> None pure?
+#e885 MockRequest.add_unredirected_header(self, name str, value str) -> None pure?
+#bdad MockRequest.get_new_headers(self) -> dict[str, str] pure?
+#3cb5 MockRequest.unverifiable(self) -> bool pure?
+#4cce MockRequest.origin_req_host(self) -> str !unsafe?
+#5b87 MockRequest.host(self) -> str !unsafe?
+#6dc6 MockResponse{} rec
+#cb13 MockResponse.__init__(self, headers Any) -> None pure?
+#0ecc MockResponse.info(self) -> Any pure?
+#87bc MockResponse.getheaders(self, name str) -> Any pure?
+#0688 extract_cookies_to_jar(jar CookieJar, request PreparedRequest, response Any) -> None pure?
+#7959 get_cookie_header(jar CookieJar, request PreparedRequest) -> str | None pure?
+#a18c remove_cookie_by_name(cookiejar CookieJar, name str, domain str | None, path str | None) -> None pure?
+#1871 CookieConflictError{} rec
+#1131 RequestsCookieJar{_policy} rec
+#b344 RequestsCookieJar.get(self, name str, default str | None, domain str | None, path str | None) -> str | None pure?
+#2c02 RequestsCookieJar.set(self, name str, value str | Morsel[dict[str, str]] | None, **kwargs) -> Cookie | None !clock !unsafe?
+#b8f8 RequestsCookieJar.iterkeys(self) -> Iterator[str] pure?
+#2713 RequestsCookieJar.keys(self) -> list[str] pure?
+#3569 RequestsCookieJar.itervalues(self) -> Iterator[str | None] pure?
+#32ce RequestsCookieJar.values(self) -> list[str | None] pure?
+#0cbd RequestsCookieJar.iteritems(self) -> Iterator[tuple[str, str | None]] pure?
+#f2a0 RequestsCookieJar.items(self) -> list[tuple[str, str | None]] pure?
+#7f92 RequestsCookieJar.list_domains(self) -> list[str] pure?
+#0eb1 RequestsCookieJar.list_paths(self) -> list[str] pure?
+#c58d RequestsCookieJar.multiple_domains(self) -> bool pure?
+#2401 RequestsCookieJar.get_dict(self, domain str | None, path str | None) -> dict[str, str | None] pure?
+#5735 RequestsCookieJar.__iter__(self) -> Iterator[Cookie] pure?
+#3b5b RequestsCookieJar.__contains__(self, name object) -> bool pure?
+#0b14 RequestsCookieJar.__getitem__(self, name str) -> str | None pure?
+#a8f3 RequestsCookieJar.__setitem__(self, name str, value str | Morsel[dict[str, str]] | None) -> None !clock !unsafe?
+#e596 RequestsCookieJar.__delitem__(self, name str) -> None pure?
+#08ab RequestsCookieJar.set_cookie(self, cookie Cookie, *args, **kwargs) -> None pure?
+#2786 RequestsCookieJar.update(self, other CookieJar | SupportsKeysAndGetItem[str, str]) -> None pure?
+#3466 RequestsCookieJar._find(self, name str, domain str | None, path str | None) -> str | None pure?
+#17c6 RequestsCookieJar._find_no_duplicates(self, name str, domain str | None, path str | None) -> str pure?
+#9d26 RequestsCookieJar.__getstate__(self) -> dict[str, Any] pure?
+#b003 RequestsCookieJar.__setstate__(self, state dict[str, Any]) -> None !unsafe
+#d55c RequestsCookieJar.copy(self) -> RequestsCookieJar pure?
+#5c4f RequestsCookieJar.get_policy(self) -> CookiePolicy pure?
+#411f _copy_cookie_jar(jar CookieJar | None) -> CookieJar | None !unsafe?
+#21f5 create_cookie(name str, value str, **kwargs) -> Cookie !unsafe?
+#6dad morsel_to_cookie(morsel Morsel[Any]) -> Cookie !clock !unsafe?
+#5ef7 cookiejar_from_dict(cookie_dict dict[str, str] | None, cookiejar None, overwrite bool) -> RequestsCookieJar !unsafe?
+#39e6 cookiejar_from_dict(cookie_dict dict[str, str] | None, cookiejar _CookieJarT, overwrite bool) -> _CookieJarT !unsafe?
+#0ce0 cookiejar_from_dict(cookie_dict dict[str, str] | None, cookiejar CookieJar | None, overwrite bool) -> CookieJar !unsafe?
+#f7fc merge_cookies(cookiejar CookieJar, cookies dict[str, str] | CookieJar | None) -> CookieJar !unsafe?
+; context cost: full source ≈5387 tok · digest sheet ≈1031 tok · 5× smaller (chars/4 estimate)
+; '?' marks static guesses — Tier 2 over-approximates, never trusts.
+
+; digest sheet — tests/fixtures/oss/requests/exceptions.py  (Tier 1+2 mechanical lift)
+#f574 RequestException{response, request} rec
+#b311 RequestException.__init__(self, *args, **kwargs) -> None pure?
+#4c78 InvalidJSONError{} rec
+#d91c JSONDecodeError{} rec
+#c135 JSONDecodeError.__init__(self, *args, **kwargs) -> None !unsafe?
+#b095 JSONDecodeError.__reduce__(self) -> tuple[Any, ...] | str !unsafe?
+#ff8f HTTPError{} rec
+#7348 ConnectionError{} rec
+#5e1a ProxyError{} rec
+#9450 SSLError{} rec
+#02f5 Timeout{} rec
+#0bcb ConnectTimeout{} rec
+#b303 ReadTimeout{} rec
+#1444 URLRequired{} rec
+#45ee TooManyRedirects{} rec
+#3540 MissingSchema{} rec
+#7538 InvalidSchema{} rec
+#428b InvalidURL{} rec
+#5df4 InvalidHeader{} rec
+#9648 InvalidProxyURL{} rec
+#7cea ChunkedEncodingError{} rec
+#0cc4 ContentDecodingError{} rec
+#c867 StreamConsumedError{} rec
+#c53d RetryError{} rec
+#ce81 UnrewindableBodyError{} rec
+#0749 RequestsWarning{} rec
+#4c61 FileModeWarning{} rec
+#b5b7 RequestsDependencyWarning{} rec
+; context cost: full source ≈1141 tok · digest sheet ≈227 tok · 5× smaller (chars/4 estimate)
+; '?' marks static guesses — Tier 2 over-approximates, never trusts.
+
+; digest sheet — tests/fixtures/oss/requests/help.py  (Tier 1+2 mechanical lift)
+#0aa4 _implementation() -> ? !unsafe?
+#10d7 info() -> dict[str, Any] !unsafe?
+#284c main() -> ? !io !unsafe?
+; context cost: full source ≈1052 tok · digest sheet ≈27 tok · 39× smaller (chars/4 estimate)
+; '?' marks static guesses — Tier 2 over-approximates, never trusts.
+
+; digest sheet — tests/fixtures/oss/requests/hooks.py  (Tier 1+2 mechanical lift)
+#a6ba default_hooks() -> dict[str, list[_t.HookType]] pure?
+#c992 dispatch_hook(key str, hooks _t.HooksInputType | None, hook_data Response, **kwargs) -> Response !unsafe?
+; context cost: full source ≈284 tok · digest sheet ≈42 tok · 7× smaller (chars/4 estimate)
+; '?' marks static guesses — Tier 2 over-approximates, never trusts.
+
+; digest sheet — tests/fixtures/oss/requests/models.py  (Tier 1+2 mechanical lift)
+#cdfa9c98 RequestEncodingMixin{url} rec
+#beef9a94 RequestEncodingMixin.path_url(self) -> str !unsafe?
+#382f0278 RequestEncodingMixin._encode_params(data str) -> str !unsafe?
+#6ec94a56 RequestEncodingMixin._encode_params(data bytes) -> bytes !unsafe?
+#54cf3249 RequestEncodingMixin._encode_params(data _t.SupportsRead[str | bytes]) -> _t.SupportsRead[str | bytes] !unsafe?
+#e75a60a1 RequestEncodingMixin._encode_params(data _t.KVDataType) -> str !unsafe?
+#026041d4 RequestEncodingMixin._encode_params(data _t.EncodableDataType) -> str | bytes | _t.SupportsRead[str | bytes] !unsafe?
+#0221861b RequestEncodingMixin._encode_files(files _t.FilesType, data _t.RawDataType | None) -> tuple[bytes, str] !unsafe?
+#2c417304 RequestHooksMixin{hooks} rec
+#9f6152d2 RequestHooksMixin.register_hook(self, event str, hook Iterable[_t.HookType] | _t.HookType) -> None pure?
+#a9850bb8 RequestHooksMixin.deregister_hook(self, event str, hook _t.HookType) -> bool pure?
+#d93e5485 Request{method, url, headers, files, data, json, params, auth, cookies} rec
+#1e404064 Request.__init__(self, method str | None, url _t.UriType | None, headers _t.HeadersType, files _t.FilesType, data _t.DataType, params _t.ParamsType, auth _t.AuthType, cookies RequestsCookieJar | CookieJar | dict[str, str] | None, hooks _t.HooksInputType | None, json _t.JsonType) -> None !unsafe?
+#b20a04ed Request.__repr__(self) -> str pure?
+#eadacaae Request.prepare(self) -> PreparedRequest pure?
+#687a5f16 PreparedRequest{method, url, headers, _cookies, body, hooks, _body_position} rec
+#aa91ac28 PreparedRequest.__init__(self) -> None !unsafe?
+#85575245 PreparedRequest.prepare(self, method str | None, url _t.UriType | None, headers Mapping[str, str | bytes] | None, files _t.FilesType, data _t.DataType, params _t.ParamsType, auth _t.AuthType, cookies RequestsCookieJar | CookieJar | dict[str, str] | None, hooks _t.HooksInputType | None, json _t.JsonType) -> None !unsafe?
+#f1ed96d3 PreparedRequest.__repr__(self) -> str pure?
+#40c7305c PreparedRequest.copy(self) -> PreparedRequest !unsafe?
+#96d241dd PreparedRequest.prepare_method(self, method str | None) -> None !unsafe?
+#935d3edc PreparedRequest._get_idna_encoded_host(host str) -> str !unsafe?
+#c7ea893c PreparedRequest.prepare_url(self, url _t.UriType, params _t.ParamsType) -> None !unsafe?
+#449dd4f4 PreparedRequest.prepare_headers(self, headers Mapping[str, str | bytes] | None) -> None !unsafe?
+#28b511e4 PreparedRequest.prepare_body(self, data _t.DataType, files _t.FilesType, json _t.JsonType) -> None !unsafe?
+#b2e5701c PreparedRequest.prepare_content_length(self, body _t.BodyType) -> None !unsafe?
+#2c2558f1 PreparedRequest.prepare_auth(self, auth _t.AuthType, url _t.UriType) -> None !unsafe?
+#935d6779 PreparedRequest.prepare_cookies(self, cookies RequestsCookieJar | CookieJar | dict[str, str] | None) -> None !unsafe?
+#158f7001 PreparedRequest.prepare_hooks(self, hooks _t.HooksInputType | None) -> None pure?
+#a9eadbe7 Response{_content, _content_consumed, _next, status_code, headers, raw, url, encoding, history, reason, cookies, elapsed, request, connection, __attrs__} rec
+#cbd6af42 Response.__init__(self) -> None !clock !unsafe?
+#7afd1f8c Response.__enter__(self) -> Self pure?
+#d70470ef Response.__exit__(self, *args) -> None !unsafe?
+#fb580bdd Response.__getstate__(self) -> dict[str, Any] pure?
+#e8819ff5 Response.__setstate__(self, state dict[str, Any]) -> None !mut
+#1e0cd691 Response.__repr__(self) -> str pure?
+#6187a7e5 Response.__bool__(self) -> bool pure?
+#5068b46d Response.__nonzero__(self) -> bool pure?
+#0e93172b Response.__iter__(self) -> Iterator[bytes] !unsafe?
+#80151d2a Response.ok(self) -> bool !unsafe?
+#0d91aed1 Response.is_redirect(self) -> bool pure?
+#b77debe4 Response.is_permanent_redirect(self) -> bool pure?
+#9855f3c8 Response.next(self) -> PreparedRequest | None pure?
+#4b8e2768 Response.apparent_encoding(self) -> str | None !unsafe?
+#41c06cb9 Response.iter_content(self, chunk_size int | None, decode_unicode Literal[False]) -> Iterator[bytes] !unsafe?
+#b092339d Response.iter_content(self, chunk_size int | None, decode_unicode Literal[True]) -> Iterator[str | bytes] !unsafe?
+#739a4006 Response.iter_content(self, chunk_size int | None, decode_unicode bool) -> Iterator[str | bytes] !unsafe?
+#dab6a907 Response.iter_lines(self, chunk_size int, decode_unicode Literal[False], delimiter bytes | None) -> Iterator[bytes] !unsafe?
+#93d6c4d0 Response.iter_lines(self, chunk_size int, decode_unicode Literal[True], delimiter str | bytes | None) -> Iterator[str | bytes] !unsafe?
+#7a19edb8 Response.iter_lines(self, chunk_size int, decode_unicode bool, delimiter str | bytes | None) -> Iterator[str | bytes] !unsafe?
+#b6b4f45b Response.content(self) -> bytes !unsafe?
+#a63dd57a Response.text(self) -> str pure?
+#b3b78164 Response.json(self, **kwargs) -> Any !unsafe?
+#665ffb2e Response.links(self) -> dict[str, dict[str, str]] !unsafe?
+#fa64bd54 Response.raise_for_status(self) -> None !unsafe?
+#fa4074d7 Response.close(self) -> None !unsafe?
+; context cost: full source ≈10445 tok · digest sheet ≈1250 tok · 8× smaller (chars/4 estimate)
+; '?' marks static guesses — Tier 2 over-approximates, never trusts.
+
+; digest sheet — tests/fixtures/oss/requests/packages.py  (Tier 1+2 mechanical lift)
+; context cost: full source ≈226 tok · digest sheet ≈1 tok · 226× smaller (chars/4 estimate)
+; '?' marks static guesses — Tier 2 over-approximates, never trusts.
+
+; digest sheet — tests/fixtures/oss/requests/sessions.py  (Tier 1+2 mechanical lift)
+#77f8b049 merge_setting(request_setting Any, session_setting Any, dict_class type) -> Any !unsafe?
+#472f820b merge_hooks(request_hooks _t.HooksType, session_hooks _t.HooksType, dict_class type) -> _t.HooksType !unsafe?
+#c8fa8430 SessionRedirectMixin{max_redirects, trust_env, cookies} rec
+#9ddd84f6 SessionRedirectMixin.send(self, request PreparedRequest, **kwargs) -> Response pure?
+#ea78a5be SessionRedirectMixin.get_redirect_target(self, resp Response) -> str | None !unsafe?
+#8bbe4be9 SessionRedirectMixin.should_strip_auth(self, old_url str, new_url str) -> bool !unsafe?
+#836ffd9e SessionRedirectMixin.resolve_redirects(self, resp Response, req PreparedRequest, stream bool, timeout _t.TimeoutType, verify _t.VerifyType, cert _t.CertType, proxies dict[str, str] | None, yield_requests bool, **adapter_kwargs) -> Generator[Response, None, None] !unsafe?
+#a2530f71 SessionRedirectMixin.rebuild_auth(self, prepared_request PreparedRequest, response Response) -> None !unsafe?
+#ba0cdaf3 SessionRedirectMixin.rebuild_proxies(self, prepared_request PreparedRequest, proxies dict[str, str] | None) -> dict[str, str] !unsafe?
+#26a2a12b SessionRedirectMixin.rebuild_method(self, prepared_request PreparedRequest, response Response) -> None pure?
+#dcf97513 Session{headers, auth, proxies, hooks, params, stream, verify, cert, max_redirects, trust_env, cookies, adapters, __attrs__} rec
+#c2fae086 Session.__init__(self) -> None !unsafe?
+#7afd1f8c Session.__enter__(self) -> Self pure?
+#d70470ef Session.__exit__(self, *args) -> None !unsafe?
+#a10e8c4e Session.prepare_request(self, request Request) -> PreparedRequest !unsafe?
+#ee3a3043 Session.request(self, method str, url _t.UriType, params _t.ParamsType, data _t.DataType, headers _t.HeadersType, cookies RequestsCookieJar | CookieJar | dict[str, str] | None, files _t.FilesType, auth _t.AuthType, timeout _t.TimeoutType, allow_redirects bool, proxies dict[str, str] | None, hooks _t.HooksInputType | None, stream bool | None, verify _t.VerifyType | None, cert _t.CertType, json _t.JsonType) -> Response !clock !env !unsafe?
+#22cab3e6 Session.get(self, url _t.UriType, params _t.ParamsType, **kwargs) -> Response !clock !env !unsafe?
+#03e69a22 Session.options(self, url _t.UriType, **kwargs) -> Response !clock !env !unsafe?
+#be615047 Session.head(self, url _t.UriType, **kwargs) -> Response !clock !env !unsafe?
+#ab736333 Session.post(self, url _t.UriType, data _t.DataType, json _t.JsonType, **kwargs) -> Response !clock !env !unsafe?
+#8d17686a Session.put(self, url _t.UriType, data _t.DataType, **kwargs) -> Response !clock !env !unsafe?
+#34e16e18 Session.patch(self, url _t.UriType, data _t.DataType, **kwargs) -> Response !clock !env !unsafe?
+#8e6d75c6 Session.delete(self, url _t.UriType, **kwargs) -> Response !clock !env !unsafe?
+#bca408e1 Session.send(self, request PreparedRequest, **kwargs) -> Response !clock !unsafe?
+#9a16a65b Session.merge_environment_settings(self, url str, proxies dict[str, str] | None, stream bool | None, verify _t.VerifyType | None, cert _t.CertType) -> dict[str, Any] !env !unsafe?
+#18f3ff52 Session.get_adapter(self, url str) -> BaseAdapter !unsafe?
+#43e04446 Session.close(self) -> None !unsafe?
+#25a7f6b1 Session.mount(self, prefix str, adapter BaseAdapter) -> None pure?
+#b7f22b0d Session.__getstate__(self) -> dict[str, Any] pure?
+#4e1300fe Session.__setstate__(self, state dict[str, Any]) -> None !mut
+#e1d1b573 session() -> Session pure?
+; context cost: full source ≈8562 tok · digest sheet ≈858 tok · 10× smaller (chars/4 estimate)
+; '?' marks static guesses — Tier 2 over-approximates, never trusts.
+
+; digest sheet — tests/fixtures/oss/requests/status_codes.py  (Tier 1+2 mechanical lift)
+#3393f583 _init() -> ? !mut !unsafe?
+; context cost: full source ≈1086 tok · digest sheet ≈9 tok · 121× smaller (chars/4 estimate)
+; '?' marks static guesses — Tier 2 over-approximates, never trusts.
+
+; digest sheet — tests/fixtures/oss/requests/structures.py  (Tier 1+2 mechanical lift)
+#4fdad9b0 CaseInsensitiveDict{_store} rec
+#ed3639e2 CaseInsensitiveDict.__init__(self, data Mapping[str, _VT] | Iterable[tuple[str, _VT]] | None, **kwargs) -> None pure?
+#a5fb5a1e CaseInsensitiveDict.__setitem__(self, key str, value _VT) -> None pure?
+#4c0bb943 CaseInsensitiveDict.__getitem__(self, key str) -> _VT pure?
+#69af8572 CaseInsensitiveDict.__delitem__(self, key str) -> None pure?
+#50f0f384 CaseInsensitiveDict.__iter__(self) -> Iterator[str] pure?
+#11da77fe CaseInsensitiveDict.__len__(self) -> int pure?
+#51edece1 CaseInsensitiveDict.lower_items(self) -> Iterator[tuple[str, _VT]] pure?
+#ce149d5c CaseInsensitiveDict.__eq__(self, other object) -> bool pure?
+#bf8afea3 CaseInsensitiveDict.copy(self) -> CaseInsensitiveDict[_VT] pure?
+#c58915c7 CaseInsensitiveDict.__repr__(self) -> str pure?
+#db9d62c4 LookupDict{name} rec
+#6daa0acb LookupDict.__init__(self, name Any) -> None pure?
+#0932c8e0 LookupDict.__repr__(self) -> str pure?
+#2e4a4905 LookupDict.__getattr__(self, key str) -> _VT | None pure?
+#1b0a2cc9 LookupDict.__getitem__(self, key str) -> _VT | None pure?
+#d0c47222 LookupDict.get(self, key str, default None) -> _VT | None pure?
+#6a0567bf LookupDict.get(self, key str, default _D | _VT) -> _D | _VT pure?
+#bbef4246 LookupDict.get(self, key str, default _D | None) -> _VT | _D | None pure?
+; context cost: full source ≈1033 tok · digest sheet ≈328 tok · 3× smaller (chars/4 estimate)
+; '?' marks static guesses — Tier 2 over-approximates, never trusts.
+
+; digest sheet — tests/fixtures/oss/requests/utils.py  (Tier 1+2 mechanical lift)
+#184f39b3 dict_to_sequence(d _t.SupportsItems[Any, Any] | Iterable[tuple[Any, Any]]) -> Iterable[tuple[Any, Any]] pure?
+#ac43da04 super_len(o Any) -> int !env !io
+#daeaf7e5 get_netrc_auth(url _t.UriType, raise_errors bool) -> tuple[str, str] | None !env !fs !unsafe?
+#71edfa4e guess_filename(obj Any) -> str | None pure?
+#bab91496 extract_zipped_paths(path str) -> str !env !fs
+#b07ecf76 atomic_open(filename str) -> Generator[BufferedWriter, None, None] !env !fs
+#59af66d6 from_key_val_list(value Mapping[Any, Any] | Iterable[tuple[Any, Any]] | None) -> dict[Any, Any] | None !unsafe?
+#94e233a7 to_key_val_list(value None) -> None pure?
+#cb283538 to_key_val_list(value _t.SupportsItems[_KT, _VT] | Iterable[tuple[_KT, _VT]]) -> list[tuple[_KT, _VT]] pure?
+#77b52aae to_key_val_list(value _t.SupportsItems[_KT, _VT] | Iterable[tuple[_KT, _VT]] | None) -> list[tuple[_KT, _VT]] | None pure?
+#877b284b parse_list_header(value str) -> list[str] !unsafe?
+#5d1fbf90 parse_dict_header(value str) -> dict[str, str | None] !unsafe?
+#923aa5d9 unquote_header_value(value str, is_filename bool) -> str pure?
+#8841d877 dict_from_cookiejar(cj CookieJar) -> dict[str, str | None] pure?
+#4efc636c add_dict_to_cookiejar(cj CookieJar, cookie_dict dict[str, str]) -> CookieJar !unsafe?
+#27405db3 get_encodings_from_content(content str) -> list[str] !io
+#8f82e416 _parse_content_type_header(header str) -> tuple[str, dict[str, Any]] !unsafe?
+#4501ace5 get_encoding_from_headers(headers CaseInsensitiveDict[str]) -> str | None !unsafe?
+#5f2a867f stream_decode_response_unicode(iterator Iterable[bytes], r Response) -> Generator[str | bytes, None, None] !unsafe?
+#ad6f273b iter_slices(string bytes, slice_length int | None) -> Generator[bytes, None, None] pure?
+#c4a5b958 iter_slices(string str, slice_length int | None) -> Generator[str, None, None] pure?
+#a2af4e3f iter_slices(string bytes | str, slice_length int | None) -> Generator[bytes | str, None, None] pure?
+#9d3cee0a get_unicode_from_response(r Response) -> str | bytes | None !io !unsafe?
+#20c2d132 unquote_unreserved(uri str) -> str !unsafe?
+#45057af4 requote_uri(uri str) -> str !unsafe?
+#75636fab address_in_network(ip str, net str) -> bool !net
+#ac5a4a63 dotted_netmask(mask int) -> str !net
+#df8e79e0 is_ipv4_address(string_ip str) -> bool !net
+#26c54db9 is_valid_cidr(string_network str) -> bool !net
+#e085e27f set_environ(env_name str, value str | None) -> Generator[None, None, None] !env
+#b7bed60a should_bypass_proxies(url str, no_proxy str | None) -> bool !env !net !unsafe?
+#21faa04f get_environ_proxies(url str, no_proxy str | None) -> dict[str, str] !env !net !unsafe?
+#50ccf83e select_proxy(url str, proxies dict[str, str] | None) -> str | None !unsafe?
+#2c839eb6 resolve_proxies(request Request | PreparedRequest, proxies dict[str, str] | None, trust_env bool) -> dict[str, str] !env !net !unsafe?
+#e8cc5df8 default_user_agent(name str) -> str pure?
+#548b134a default_headers() -> CaseInsensitiveDict[str] !unsafe?
+#da0551fb parse_header_links(value str) -> list[dict[str, str]] !unsafe?
+#00fc3bc3 guess_json_utf(data bytes) -> str | None pure?
+#c63cae36 prepend_scheme_if_needed(url str, new_scheme str) -> str !unsafe?
+#b21b60d7 get_auth_from_url(url str) -> tuple[str, str] !unsafe?
+#8a36521e check_header_validity(header tuple[str | bytes, str | bytes]) -> None !unsafe?
+#6bec2520 _validate_header_part(header tuple[str | bytes, str | bytes], header_part str | bytes, header_validator_index int) -> None !unsafe?
+#b0102a26 urldefragauth(url str) -> str !unsafe?
+#cc4723ff rewind_body(prepared_request PreparedRequest) -> None !unsafe?
+; context cost: full source ≈9080 tok · digest sheet ≈898 tok · 10× smaller (chars/4 estimate)
+; '?' marks static guesses — Tier 2 over-approximates, never trusts.

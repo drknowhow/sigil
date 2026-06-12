@@ -1,0 +1,740 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sigil — contract-first, content-addressed code for human ↔ AI</title>
+<style>
+  :root{
+    --bg:#07090f; --bg2:#0b0f18; --panel:rgba(255,255,255,.035);
+    --line:rgba(255,255,255,.08); --txt:#e8ecf4; --dim:#8b94a7;
+    --cyan:#5eead4; --violet:#a78bfa; --amber:#fbbf24; --red:#fb7185;
+    --mono:'SFMono-Regular',ui-monospace,'Cascadia Code',Consolas,monospace;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{background:var(--bg);color:var(--txt);font:16px/1.65 'Segoe UI',system-ui,-apple-system,sans-serif;overflow-x:hidden}
+  #bg{position:fixed;inset:0;z-index:0;opacity:.9}
+  .wrap{position:relative;z-index:1;max-width:1060px;margin:0 auto;padding:0 24px}
+  /* hero */
+  header{min-height:92vh;display:flex;flex-direction:column;justify-content:center}
+  .tag{font-family:var(--mono);font-size:13px;letter-spacing:.22em;text-transform:uppercase;color:var(--cyan);margin-bottom:18px}
+  h1{font-size:clamp(56px,10vw,118px);font-weight:800;letter-spacing:-.03em;line-height:.95;
+     background:linear-gradient(100deg,#fff 20%,var(--cyan) 55%,var(--violet) 90%);
+     -webkit-background-clip:text;background-clip:text;color:transparent}
+  .sub{max-width:680px;margin-top:22px;font-size:clamp(17px,2.2vw,21px);color:var(--dim)}
+  .sub b{color:var(--txt);font-weight:600}
+  .chips{display:flex;flex-wrap:wrap;gap:10px;margin-top:34px}
+  .chip{font-family:var(--mono);font-size:13px;padding:8px 14px;border:1px solid var(--line);
+        border-radius:999px;background:var(--panel);backdrop-filter:blur(6px)}
+  .chip em{color:var(--cyan);font-style:normal;font-weight:700}
+  .cta{margin-top:38px;display:flex;gap:14px;flex-wrap:wrap}
+  .btn{font-family:var(--mono);font-size:14px;padding:12px 22px;border-radius:10px;text-decoration:none;transition:.2s}
+  .btn.primary{background:linear-gradient(95deg,var(--cyan),var(--violet));color:#06121a;font-weight:700}
+  .btn.primary:hover{filter:brightness(1.12)}
+  .btn.ghost{border:1px solid var(--line);color:var(--txt)}
+  .btn.ghost:hover{border-color:var(--cyan);color:var(--cyan)}
+  /* sections */
+  section{padding:84px 0;border-top:1px solid var(--line)}
+  h2{font-size:clamp(26px,4vw,38px);letter-spacing:-.02em;margin-bottom:8px}
+  .lede{color:var(--dim);max-width:720px;margin-bottom:38px}
+  .lede a{color:var(--cyan)}
+  .grid{display:grid;gap:18px}
+  .g3{grid-template-columns:repeat(auto-fit,minmax(280px,1fr))}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:26px;backdrop-filter:blur(8px)}
+  .card h3{font-size:17px;margin-bottom:10px}
+  .card h3 .ic{color:var(--cyan);font-family:var(--mono);margin-right:8px}
+  .card p{font-size:14.5px;color:var(--dim)}
+  .card code{font-family:var(--mono);font-size:13px;color:var(--cyan)}
+  /* terminal */
+  .term{background:#070b12;border:1px solid var(--line);border-radius:14px;overflow:hidden;box-shadow:0 24px 60px rgba(0,0,0,.5)}
+  .tbar{display:flex;gap:7px;align-items:center;padding:11px 16px;border-bottom:1px solid var(--line);background:rgba(255,255,255,.025)}
+  .dot{width:11px;height:11px;border-radius:50%}
+  .tbar span{font-family:var(--mono);font-size:12px;color:var(--dim);margin-left:10px}
+  .term pre{padding:20px 22px;font-family:var(--mono);font-size:13.5px;line-height:1.75;overflow-x:auto;color:#c4cbda}
+  .h{color:var(--violet)} .e{color:var(--amber)} .c{color:#566077} .ok{color:var(--cyan)} .bad{color:var(--red)}
+  /* tables */
+  table{width:100%;border-collapse:collapse;font-size:14.5px}
+  th{font-family:var(--mono);font-size:12px;text-transform:uppercase;letter-spacing:.1em;color:var(--dim);text-align:left;padding:10px 14px;border-bottom:1px solid var(--line)}
+  td{padding:12px 14px;border-bottom:1px solid rgba(255,255,255,.045)}
+  td.num{font-family:var(--mono)} .pos{color:var(--cyan);font-weight:700}
+  .note{font-size:13px;color:var(--dim);margin-top:14px}
+  .note b{color:var(--amber)}
+  /* phases */
+  .phase{display:flex;gap:16px;align-items:baseline;padding:14px 4px;border-bottom:1px solid rgba(255,255,255,.045)}
+  .phase .n{font-family:var(--mono);color:var(--cyan);min-width:74px}
+  .phase .check{margin-left:auto;font-family:var(--mono);color:var(--cyan);white-space:nowrap}
+  .phase .d{color:var(--dim);font-size:14.5px}
+  footer{padding:60px 0 80px;color:var(--dim);font-size:13.5px;border-top:1px solid var(--line)}
+  /* tabs */
+  nav.tabs{position:fixed;top:18px;left:50%;transform:translateX(-50%);z-index:10;display:flex;gap:6px;
+    padding:6px;border:1px solid var(--line);border-radius:999px;background:rgba(10,14,22,.72);backdrop-filter:blur(12px)}
+  nav.tabs button{font-family:var(--mono);font-size:13px;padding:8px 18px;border:none;border-radius:999px;
+    background:transparent;color:var(--dim);cursor:pointer;transition:.18s}
+  nav.tabs button:hover{color:var(--txt)}
+  nav.tabs button.active{background:linear-gradient(95deg,var(--cyan),var(--violet));color:#06121a;font-weight:700}
+  /* guide */
+  #view-guide{padding-top:110px;min-height:100vh}
+  #view-guide h2.gtitle{font-size:clamp(30px,5vw,46px)}
+  .step{display:flex;gap:18px;margin:0 0 14px}
+  .step .sn{font-family:var(--mono);color:var(--cyan);font-weight:700;min-width:30px;font-size:15px}
+  .gh4{font-family:var(--mono);font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:var(--violet);margin:0 0 14px}
+  .copy{position:relative}
+  .copy button.cp{position:absolute;top:9px;right:10px;font-family:var(--mono);font-size:11px;padding:4px 10px;
+    border:1px solid var(--line);border-radius:7px;background:rgba(255,255,255,.05);color:var(--dim);cursor:pointer}
+  .copy button.cp:hover{color:var(--cyan);border-color:var(--cyan)}
+  kbd{font-family:var(--mono);font-size:12.5px;padding:2px 7px;border:1px solid var(--line);border-radius:6px;background:var(--panel)}
+  .gtable td:first-child{font-family:var(--mono);color:var(--cyan);white-space:nowrap}
+  .mini{font-size:13px;color:var(--dim)}
+  footer code{font-family:var(--mono);color:var(--cyan)}
+  .r13{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:18px}
+  /* explainer player */
+  .player{position:relative;border:1px solid var(--line);border-radius:18px;overflow:hidden;
+    background:#05070c;box-shadow:0 30px 80px rgba(0,0,0,.55)}
+  .stagewrap{position:relative;width:100%;aspect-ratio:16/9;overflow:hidden}
+  #vstage{position:absolute;top:0;left:0;width:1280px;height:720px;transform-origin:top left}
+  .vscene{position:absolute;inset:0;padding:70px 80px;display:flex;flex-direction:column;
+    justify-content:center;opacity:0;pointer-events:none}
+  .vscene.active{pointer-events:auto}
+  .vt{opacity:0;transform:translateY(26px);transition:opacity .5s ease,transform .5s ease}
+  .vt.on{opacity:1;transform:translateY(0)}
+  .vglow1{position:absolute;width:900px;height:900px;right:-300px;top:-400px;border-radius:50%;
+    background:radial-gradient(circle,rgba(94,234,212,.08),transparent 60%)}
+  .vglow2{position:absolute;width:800px;height:800px;left:-300px;bottom:-400px;border-radius:50%;
+    background:radial-gradient(circle,rgba(167,139,250,.08),transparent 60%)}
+  .vlabel{font-family:var(--mono);font-size:14px;letter-spacing:.2em;text-transform:uppercase;color:var(--cyan)}
+  .vbig{font-size:42px;font-weight:800;letter-spacing:-.02em;color:var(--txt);line-height:1.2}
+  .vdim{font-size:21px;color:var(--dim);line-height:1.55}
+  .vterm{background:#070b12;border:1px solid var(--line);border-radius:12px;
+    font-family:var(--mono);font-size:16px;line-height:1.75;padding:18px 22px}
+  .vrow{display:flex;gap:14px}
+  .vcard{flex:1;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px 20px}
+  .vstep{flex:1;background:var(--panel);border:2px solid var(--line);border-radius:12px;padding:14px 18px;
+    transition:border-color .4s,background .4s}
+  .vstep.on{border-color:var(--cyan);background:rgba(94,234,212,.08)}
+  .vstep .sn2{font-family:var(--mono);font-size:19px;color:var(--dim);font-weight:700;transition:color .4s}
+  .vstep.on .sn2{color:var(--cyan)}
+  .vstat{font-family:var(--mono);font-size:46px;font-weight:700;color:var(--cyan)}
+  .strike{position:absolute;left:6%;top:52%;height:3px;width:0;background:var(--red);border-radius:2px;
+    transition:width .6s ease}
+  .strike.on{width:88%}
+  .vflash{position:absolute;inset:0;background:var(--red);opacity:0;pointer-events:none}
+  .vflash.on{animation:vflash .9s ease-out 1}
+  @keyframes vflash{0%{opacity:0}18%{opacity:.15}100%{opacity:0}}
+  /* controls */
+  .vbar{display:flex;align-items:center;gap:14px;padding:12px 16px;border-top:1px solid var(--line);
+    background:rgba(255,255,255,.025)}
+  .vbar button{font-family:var(--mono);font-size:13px;padding:7px 14px;border:1px solid var(--line);
+    border-radius:8px;background:transparent;color:var(--txt);cursor:pointer}
+  .vbar button:hover{border-color:var(--cyan);color:var(--cyan)}
+  .vprog{flex:1;height:8px;border-radius:4px;background:rgba(255,255,255,.08);cursor:pointer;position:relative}
+  .vprog .fill{height:100%;width:0;border-radius:4px;background:linear-gradient(90deg,var(--cyan),var(--violet))}
+  .vtime{font-family:var(--mono);font-size:12px;color:var(--dim);min-width:86px;text-align:right}
+  #vmp4{display:none;width:100%}
+</style>
+</head>
+<body>
+<canvas id="bg"></canvas>
+<div class="wrap">
+
+<nav class="tabs" aria-label="page tabs">
+  <button id="tab-home" class="active" onclick="showTab('home')">Overview</button>
+  <button id="tab-guide" onclick="showTab('guide')">Quick Guide</button>
+</nav>
+
+<div id="view-home">
+<header>
+  <div class="tag">v1.0.1 · all 6 phase gates green · 136 tests · field-tested over live MCP</div>
+  <h1>SIGIL</h1>
+  <p class="sub">A <b>contract-first</b>, <b>content-addressed</b> language and toolchain for
+  human&thinsp;↔&thinsp;AI coding. Intent is code. Effects are visible. Edits are patches.
+  And nothing is called done until <b>verification says so</b>.</p>
+  <div class="chips">
+    <div class="chip"><em>0</em> effect under-reports / 33 labeled fixtures</div>
+    <div class="chip"><em>5.9×</em> measured context reduction (requests 2.34.2)</div>
+    <div class="chip"><em>&lt;50ms</em> verify cache hit</div>
+    <div class="chip"><em>18 tok</em> to fix a bug via patch</div>
+  </div>
+  <div class="cta">
+    <a class="btn primary" href="#watch">▶ Watch how it works (75s)</a>
+    <a class="btn ghost" href="#results">Measured results</a>
+    <a class="btn ghost" href="#loop">The agent loop</a>
+  </div>
+</header>
+
+<section id="watch" style="padding-top:40px">
+  <h2>How it works — in 75 seconds</h2>
+  <p class="lede">The explainer below runs live in your browser (same scenes as the Remotion clip in
+  <code>video/</code>). Once you render the MP4 (<code>cd video && npm i && npm run render</code>) this
+  player upgrades to the video automatically.</p>
+  <div class="player">
+    <video id="vmp4" src="../video/out/sigil-explainer.mp4" controls preload="metadata"></video>
+    <div class="stagewrap" id="stagewrap">
+      <div id="vstage">
+
+        <div class="vscene" data-dur="150">
+          <div class="vglow1"></div><div class="vglow2"></div>
+          <div style="text-align:center">
+            <div class="vt" data-at="2" style="font-size:150px;font-weight:800;letter-spacing:-.03em;line-height:1;background:linear-gradient(100deg,#fff 20%,var(--cyan) 55%,var(--violet) 90%);-webkit-background-clip:text;background-clip:text;color:transparent">SIGIL</div>
+            <div class="vt vbig" data-at="24" style="font-size:30px;font-weight:600;margin-top:10px">Code an AI can't quietly get wrong.</div>
+            <div class="vt vlabel" data-at="48" style="margin-top:24px">contract-first · content-addressed · effect-typed · verified</div>
+          </div>
+        </div>
+
+        <div class="vscene" data-dur="270">
+          <div class="vglow1"></div>
+          <div class="vt vlabel" data-at="2" style="color:var(--violet)">the problem</div>
+          <div class="vt vbig" data-at="10" style="margin-top:10px">"Fetch the prices and cache them."</div>
+          <div class="vt vdim" data-at="32" style="margin-top:14px">…has <span style="color:var(--amber)">hundreds of valid implementations</span> — and no way to check which one the AI gave you.</div>
+          <div class="vrow" style="margin-top:36px">
+            <div class="vcard vt" data-at="70" style="position:relative"><b style="font-size:20px">Natural language</b><div class="vdim" style="font-size:17px">optimized for ambiguity</div><div class="strike" data-at="150"></div></div>
+            <div class="vcard vt" data-at="82" style="position:relative"><b style="font-size:20px">Mainstream code</b><div class="vdim" style="font-size:17px">throws the intent away</div><div class="strike" data-at="162"></div></div>
+            <div class="vcard vt" data-at="94" style="position:relative"><b style="font-size:20px">AI review</b><div class="vdim" style="font-size:17px">hopes someone notices</div><div class="strike" data-at="174"></div></div>
+          </div>
+          <div class="vt vbig" data-at="195" style="margin-top:38px;font-size:30px">Sigil's bet: make <span style="color:var(--cyan)">intent</span>, <span style="color:var(--amber)">effects</span> and <span style="color:var(--violet)">verification</span> part of the language.</div>
+        </div>
+
+        <div class="vscene" data-dur="330">
+          <div class="vglow2"></div>
+          <div class="vt vlabel" data-at="2">step 1 · lift what you already have</div>
+          <div class="vt vbig" data-at="10" style="margin:8px 0 22px">Any Python repo → a one-page digest sheet</div>
+          <div class="vrow" style="align-items:center">
+            <div class="vterm vt" data-at="20" style="flex:1;color:var(--comment, #566077);font-size:14px"><span style="color:#566077">def fetch_user(user_id):<br>&nbsp;&nbsp;cached = read_cache(…)<br>&nbsp;&nbsp;if cached: return cached<br>&nbsp;&nbsp;r = requests.get(f"{API}/users/…")<br>&nbsp;&nbsp;write_cache(…)<br>&nbsp;&nbsp;return r.json()<br><br># …14 more functions…</span></div>
+            <div class="vt" data-at="42" style="font-family:var(--mono);color:var(--cyan);font-size:19px;white-space:nowrap">sigil lift ⟶</div>
+            <div class="vterm" style="flex:1.3;font-size:15.5px">
+              <div class="vt" data-at="62"><span class="h">#705b</span> get_config(key) <span class="e">!env</span></div>
+              <div class="vt" data-at="76"><span class="h">#d939</span> read_cache(name, ttl) <span class="e">!clock !fs</span></div>
+              <div class="vt" data-at="90"><span class="h">#d4b8</span> fetch_user(user_id) <span class="e">!clock !fs !net</span></div>
+              <div class="vt" data-at="104"><span class="h">#9b4e</span> order_totals(orders) <span class="ok">pure?</span></div>
+              <div class="vt" data-at="118"><span class="h">#f574</span> jitter_sleep(attempt) <span class="e">!clock !rand</span></div>
+              <div class="vt" data-at="132"><span class="h">#e70b</span> dispatch(event) <span class="bad">!unsafe?</span></div>
+              <div class="vt" data-at="150" style="color:#566077;font-size:13px">; '?' = static guess — never silenced</div>
+            </div>
+          </div>
+          <div class="vt" data-at="200" style="margin-top:26px;display:flex;gap:18px;align-items:baseline">
+            <span class="vstat"><span data-count data-from="52464" data-to="8907" data-start="205" data-cdur="70"></span> tok</span>
+            <span class="vdim">measured on requests 2.34.2 — <span style="color:var(--txt)">5.9× smaller</span>, hashes instead of bodies</span>
+          </div>
+        </div>
+
+        <div class="vscene" data-dur="270">
+          <div class="vglow1"></div>
+          <div class="vt vlabel" data-at="2" style="color:var(--violet)">step 2 · write the contract, not the code</div>
+          <div class="vt vbig" data-at="10" style="margin:8px 0 22px">A goal is the entire human contribution</div>
+          <div class="vrow">
+            <div class="vterm vt" data-at="22" style="flex:1.4;font-size:17px">
+              <div><span class="h">goal</span> fetch_prices {</div>
+              <div>&nbsp;&nbsp;intent: <span class="ok">"Daily OHLCV for the given tickers"</span></div>
+              <div>&nbsp;&nbsp;in: tickers [Str], start Str, end Str</div>
+              <div>&nbsp;&nbsp;out: Map</div>
+              <div>&nbsp;&nbsp;fx: <span class="e">!net(api.example.com)</span></div>
+              <div>&nbsp;&nbsp;verify:</div>
+              <div>&nbsp;&nbsp;&nbsp;&nbsp;<span class="ok">out.keys.set == tickers.set</span></div>
+              <div>}</div>
+            </div>
+            <div style="flex:1;display:flex;flex-direction:column;gap:16px;justify-content:center">
+              <div class="vt" data-at="55" style="border-left:3px solid var(--cyan);padding-left:14px;font-family:var(--mono);font-size:15px;color:var(--cyan)">intent — for humans, kept with the code</div>
+              <div class="vt" data-at="85" style="border-left:3px solid var(--amber);padding-left:14px;font-family:var(--mono);font-size:15px;color:var(--amber)">effect BUDGET — the impl may use at most this</div>
+              <div class="vt" data-at="115" style="border-left:3px solid var(--violet);padding-left:14px;font-family:var(--mono);font-size:15px;color:var(--violet)">verify — the acceptance test, written before any code</div>
+            </div>
+          </div>
+          <div class="vt vbig" data-at="160" style="margin-top:28px;font-size:26px">An implementation is only <span style="color:var(--cyan)">accepted</span> if these clauses pass. <span style="color:var(--violet)">The goal doesn't move.</span></div>
+        </div>
+
+        <div class="vscene" data-dur="240">
+          <div class="vflash" data-at="92"></div>
+          <div class="vt vlabel" data-at="2" style="color:var(--red)">step 3 · the budget is enforced, statically</div>
+          <div class="vt vbig" data-at="10" style="margin:8px 0 22px">An AI sneaks in a cache write. The build says no.</div>
+          <div class="vterm" style="font-size:17px">
+            <div class="vt" data-at="25" style="color:#566077">-- impl calls save_cache() → open() — but fx: !net only</div>
+            <div class="vt" data-at="60" style="color:var(--red);font-weight:700">sigil build: rejected.</div>
+            <div class="vt" data-at="75">effect budget exceeded for goal 'fetch_prices':</div>
+            <div class="vt" data-at="92" style="padding-left:24px">fetch_prices → save_cache: open requires <span class="bad" style="font-weight:700">!fs</span>; budget allows <span class="e">!net(api.example.com)</span></div>
+            <div class="vt" data-at="125" style="color:var(--cyan)">Remedy: remove the call, or extend the goal's fx: budget if intended.</div>
+          </div>
+          <div class="vt vdim" data-at="155" style="margin-top:24px">No runtime sandbox needed — it's a <span style="color:var(--txt)">call-graph check at build time</span>. Hidden I/O, eliminated structurally.</div>
+        </div>
+
+        <div class="vscene" data-dur="420">
+          <div class="vglow2"></div>
+          <div class="vt vlabel" data-at="2">step 4 · how an agent works on it (MCP harness)</div>
+          <div class="vt vbig" data-at="10" style="margin:8px 0 18px">sheet → expand → patch → verify</div>
+          <div class="vrow" style="margin-bottom:20px">
+            <div class="vstep" data-at="20"><div class="sn2">sheet()</div><div class="vdim" style="font-size:14px">digests, not files</div></div>
+            <div class="vstep" data-at="95"><div class="sn2">expand(#6e01)</div><div class="vdim" style="font-size:14px">only what you change</div></div>
+            <div class="vstep" data-at="170"><div class="sn2">patch(…)</div><div class="vdim" style="font-size:14px">ops, not files</div></div>
+            <div class="vstep" data-at="280"><div class="sn2">verify ✓</div><div class="vdim" style="font-size:14px">checked before "done"</div></div>
+          </div>
+          <div class="vterm" style="font-size:16px">
+            <div class="vt" data-at="50"><span style="color:#566077">verify:</span> <span class="bad">fail</span> — out == n * 3 with out=8, n=4</div>
+            <div class="vt" data-at="110"><span style="color:#566077">expand #6e01:</span> fn triple(n Int) { ret n * <span class="bad">2</span> }</div>
+            <div class="vt" data-at="180" style="color:var(--violet);min-height:28px"><span data-type data-start="182" data-text='patch #6e01 { body.stmts.0.value.right.val := "3" }   -- 18 tokens of output'></span></div>
+            <div class="vt" data-at="285">⇒ <span class="h">#a4c2</span> · verify: <span class="ok" style="font-weight:700">pass</span> · goal triple: <span class="ok" style="font-weight:700">verified</span></div>
+          </div>
+          <div class="vt" data-at="320" style="margin-top:20px;display:flex;gap:26px;font-size:15px">
+            <span><b style="color:var(--violet);font-family:var(--mono)">R1</b> <span class="vdim" style="font-size:15px">context only grows</span></span>
+            <span><b style="color:var(--violet);font-family:var(--mono)">R2</b> <span class="vdim" style="font-size:15px">expand beats regenerating</span></span>
+            <span><b style="color:var(--violet);font-family:var(--mono)">R3</b> <span class="vdim" style="font-size:15px">failures return patch targets, never "try again"</span></span>
+          </div>
+        </div>
+
+        <div class="vscene" data-dur="300">
+          <div class="vglow1"></div>
+          <div class="vt vlabel" data-at="2" style="color:var(--violet)">measured, not estimated</div>
+          <div class="vt vbig" data-at="10" style="margin:8px 0 26px">v1.0.1 — every number is from the actual build</div>
+          <div class="vrow">
+            <div class="vcard vt" data-at="22"><div class="vstat"><span data-count data-from="0" data-to="136" data-start="26" data-cdur="40"></span></div><div class="vdim" style="font-size:15px">tests green · 92% core coverage</div></div>
+            <div class="vcard vt" data-at="36"><div class="vstat"><span data-count data-from="0" data-to="5.9" data-start="40" data-cdur="40" data-dec="1"></span>×</div><div class="vdim" style="font-size:15px">measured context reduction</div></div>
+            <div class="vcard vt" data-at="50"><div class="vstat"><span data-count data-from="9" data-to="0" data-start="54" data-cdur="30"></span></div><div class="vdim" style="font-size:15px">effect under-reports / 33 fixtures</div></div>
+            <div class="vcard vt" data-at="64"><div class="vstat">&lt;50ms</div><div class="vdim" style="font-size:15px">verify cache hit, unchanged code</div></div>
+          </div>
+          <div class="vt vdim" data-at="130" style="margin-top:26px">Honest where it matters: the spec guessed 10×+ — measurement said <span style="color:var(--txt)">5.9× at first contact</span>; the bigger wins compound per-iteration.</div>
+        </div>
+
+        <div class="vscene" data-dur="270">
+          <div class="vglow1"></div><div class="vglow2"></div>
+          <div style="text-align:center">
+            <div class="vt" data-at="4" style="font-size:110px;font-weight:800;letter-spacing:-.03em;line-height:1;background:linear-gradient(100deg,#fff 20%,var(--cyan) 55%,var(--violet) 90%);-webkit-background-clip:text;background-clip:text;color:transparent">SIGIL</div>
+            <div class="vt" data-at="22" style="font-size:26px;margin-top:8px">Nothing is called done until <b>verification says so</b>.</div>
+            <div class="vt vterm" data-at="50" style="display:inline-block;margin-top:26px;text-align:left;font-size:18px;color:var(--cyan)">pip install -e ".[dev,harness]"<br>sigil lift your/code · sigil serve --root .</div>
+            <div class="vt vlabel" data-at="80" style="margin-top:22px">see the quick guide tab ↑</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+    <div class="vbar">
+      <button id="vplay">▶ play</button>
+      <button id="vrestart">↺</button>
+      <div class="vprog" id="vprog"><div class="fill" id="vfill"></div></div>
+      <div class="vtime" id="vtimer">0:00 / 1:15</div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>Three guarantees, enforced — not reviewed</h2>
+  <p class="lede">Mainstream languages throw away intent; prompts can't be verified. Sigil makes
+  the contract the source of truth and the toolchain its enforcer.</p>
+  <div class="grid g3">
+    <div class="card"><h3><span class="ic">#</span>Content-addressed identity</h3>
+      <p>Every definition is named by the sha256 of its canonical AST. Reformatting, comments,
+      docstrings — hash unchanged (proven by property tests, 200 random mutations a run).
+      Any semantic change — hash moves. <em>"Did the AI change the logic?"</em> is a string compare.</p></div>
+    <div class="card"><h3><span class="ic">!</span>Effects are typed</h3>
+      <p>Every function carries its effect row: <code>!net !fs !rand !clock !env</code>… A goal's
+      budget is checked <b>statically</b>; a sneaked-in write fails the build naming the exact
+      call chain. When analysis can't see through dynamic code it says <code>!unsafe?</code> —
+      uncertainty is never silenced.</p></div>
+    <div class="card"><h3><span class="ic">∴</span>Verify before display</h3>
+      <p>Goals declare executable <code>verify:</code> clauses. Implementations run them
+      subprocess-isolated with timeouts; a pass binds goal↔impl in the store, anything else
+      stays <code>provisional</code>. Patches are auto-verified before success is ever shown.</p></div>
+  </div>
+</section>
+
+<section>
+  <h2>What a digest sheet looks like</h2>
+  <p class="lede">Real output — <code>sigil lift examples/lift-legacy/webapp.py</code>, a deliberately
+  effect-rich legacy module. One line per definition; the AI reads this, not your files.</p>
+  <div class="term">
+    <div class="tbar"><div class="dot" style="background:#fb7185"></div><div class="dot" style="background:#fbbf24"></div><div class="dot" style="background:#34d399"></div><span>sigil lift — Tier 1+2 mechanical, never executes your code</span></div>
+    <pre><span class="h">#705b</span> get_config(key, default) <span class="e">!env</span>
+<span class="h">#d939</span> read_cache(name, ttl_seconds) <span class="e">!clock !fs</span>
+<span class="h">#d4b8</span> fetch_user(user_id) <span class="e">!clock !fs !net</span>
+<span class="h">#9b4e</span> order_totals(orders) <span class="ok">pure?</span>
+<span class="h">#f574</span> jitter_sleep(attempt) <span class="e">!clock !rand</span>
+<span class="h">#e70b</span> dispatch(event) <span class="bad">!unsafe?</span>   <span class="c">← dynamic dispatch: flagged, not guessed</span>
+<span class="c">; '?' marks static guesses — Tier 2 over-approximates, never trusts.</span></pre>
+  </div>
+</section>
+
+<section id="loop">
+  <h2>The agent loop: sheet → expand → patch → verify</h2>
+  <p class="lede">From the scripted agent-session transcript (<code>examples/agent-session/</code>):
+  a seeded bug fixed with <b>zero file reads, zero file writes</b>, one patch.</p>
+  <div class="term">
+    <div class="tbar"><div class="dot" style="background:#fb7185"></div><div class="dot" style="background:#fbbf24"></div><div class="dot" style="background:#34d399"></div><span>MCP harness · sigil serve · rules R1–R3 enforced</span></div>
+    <pre><span class="c">-- verify reports the failure, with values:</span>
+verify triple: <span class="bad">fail</span> — <span class="e">out == n * 3</span> with out=8 inputs={'n': 4}
+
+<span class="c">-- the agent expands only the 11-token implementation, not the file:</span>
+fn triple(n Int) -> Int { ret n * <span class="bad">2</span> }
+
+<span class="c">-- one 18-token patch op, auto-verified before display (R3):</span>
+patch <span class="h">#6e01</span> { body.stmts.0.value.right.val := <span class="ok">"3"</span> }
+⇒ <span class="h">#a4c2</span> · verify: <span class="ok">pass</span> · goal triple: <span class="ok">verified</span>
+
+<span class="c">-- the sheet only ever grew (R1, property-tested):</span>
+<span class="h">#6e01</span> -> <span class="h">#a4c2</span> triple</pre>
+  </div>
+  <div class="r13" style="margin-top:18px">
+    <div class="card"><h3><span class="ic">R1</span>Append-only context</h3><p>The digest sheet never rewrites history — your cached prompt prefix stays byte-stable. Proven with a hypothesis property over arbitrary op sequences.</p></div>
+    <div class="card"><h3><span class="ic">R2</span>Expand, don't regenerate</h3><p><code>expand(#hash)</code> is byte-identical forever. Re-reading code is cheap cached input; re-emitting it from memory is expensive output.</p></div>
+    <div class="card"><h3><span class="ic">R3</span>Verify before display</h3><p>Failures return the failing clause, observed values, and the subtree hash to patch — never “try again from scratch”. The retry term is the one that dominates cost.</p></div>
+  </div>
+</section>
+
+<section id="results">
+  <h2>Measured results</h2>
+  <p class="lede">Real BPE tokenizer, real artifacts, reproducible via
+  <code>scripts/measure_costs.py</code>. Where measurement contradicted the spec's estimates,
+  the measured number won (docs/cost-model.md).</p>
+  <div class="card" style="padding:10px 6px 4px">
+  <table>
+    <tr><th>source</th><th>full source</th><th>digest sheet</th><th>reduction</th></tr>
+    <tr><td>demo_module.py (4 fns)</td><td class="num">319 tok</td><td class="num">133 tok</td><td class="num pos">2.4×</td></tr>
+    <tr><td>lift-legacy webapp.py (15 fns)</td><td class="num">767 tok</td><td class="num">307 tok</td><td class="num pos">2.5×</td></tr>
+    <tr><td>requests 2.34.2 — 6,385 lines, 302 definitions</td><td class="num">52,464 tok</td><td class="num">8,907 tok</td><td class="num pos">5.9×</td></tr>
+  </table>
+  </div>
+  <p class="note"><b>Honest note:</b> the spec guessed "10×+ at first contact" — measurement says 5.9× on a real repo.
+  The bigger win is per <i>iteration</i>: the sheet is cache-eligible (R1), edits expand ~11–150 tokens
+  and patches cost ~18 tokens of output, versus re-reading 52k fresh tokens.</p>
+  <div class="grid g3" style="margin-top:26px">
+    <div class="card"><h3>Effect inference</h3><p><b class="pos" style="font-size:26px">0</b><br>under-reports across 33 hand-labeled fixtures
+      (2.6% over-report). Hand-audited 30-function sample of <code>requests</code>: within the &lt;10% gate; both discovered misses became fixtures and were fixed.</p></div>
+    <div class="card"><h3>Verification</h3><p><b class="pos" style="font-size:26px">&lt;50 ms</b><br>cache hit on unchanged code (gate-tested).
+      Infinite-loop contracts killed by timeout; crashing code subprocess-isolated; failing contracts never bind.</p></div>
+    <div class="card"><h3>Build quality</h3><p><b class="pos" style="font-size:26px">136</b><br>tests green · 92% coverage on core/lift/transpile ·
+      ruff clean · property tests for hashing, round-trips, patch≡re-lift, R1 · CI on 3.11/3.12.</p></div>
+  </div>
+</section>
+
+<section>
+  <h2>Six phases, six gates, all green</h2>
+  <p class="lede">Every phase exit gate was written as a failing test before its implementation.</p>
+  <div>
+    <div class="phase"><span class="n">Phase 0</span><span class="d">Core AST + canonical hashing — formatting never moves a hash, semantics always do</span><span class="check">✓ gate</span></div>
+    <div class="phase"><span class="n">Phase 1</span><span class="d">Lifter Tiers 1–2 — requests 2.34.2 lifted; zero under-reports on the labeled set</span><span class="check">✓ gate</span></div>
+    <div class="phase"><span class="n">Phase 2</span><span class="d">Language + transpiler — LL(1) grammar, lossless round-trip, over-budget effects rejected with the call chain</span><span class="check">✓ gate</span></div>
+    <div class="phase"><span class="n">Phase 3</span><span class="d">Verify runner + store — subprocess isolation, (goal, impl) verdict cache, binding only on pass</span><span class="check">✓ gate</span></div>
+    <div class="phase"><span class="n">Phase 4</span><span class="d">MCP harness — lift / sheet / expand / patch / verify under R1–R3; scripted agent session</span><span class="check">✓ gate</span></div>
+    <div class="phase"><span class="n">Phase 5</span><span class="d">Hardening + release — measured cost model, docs, examples, clean-venv install, v1.0.0 (v1.0.1 after field testing)</span><span class="check">✓ gate</span></div>
+  </div>
+</section>
+
+<footer>
+  <p><b>Honest limits</b> (docs/limitations.md): effect scopes are recorded but not yet enforced; heavily dynamic
+  Python earns <code>!unsafe?</code> rather than answers; lifting is one-directional in v1.0; verify network-blocking
+  is best-effort. The Tier-3 contract proposer was the plan's sanctioned cut.</p>
+  <p style="margin-top:14px">Get started: <code>pip install -e ".[dev,harness]"</code> → <code>sigil lift your/code</code> →
+  <code>sigil serve --root .</code> · docs/quickstart.md · Sigil v1.0.1, 2026</p>
+</footer>
+</div><!-- /view-home -->
+
+<div id="view-guide" hidden>
+  <h2 class="gtitle">Quick Guide</h2>
+  <p class="lede">From zero to a verifying, patch-driven codebase — for humans first, then for
+  your agents. Everything here is copy-paste real; full docs live in <code>docs/</code>.</p>
+
+  <section style="border-top:none;padding-top:10px">
+    <p class="gh4">1 · Setup</p>
+    <div class="step"><span class="sn">1.1</span><div>Requirements: <b>Python 3.11+</b> and pip. From the <code>sigil-build/</code> repo root:</div></div>
+    <div class="term copy"><button class="cp">copy</button><pre>pip install -e ".[dev,harness]"   <span class="c"># core + tests + MCP server</span>
+sigil --version                    <span class="c"># sigil 1.0.1</span></pre></div>
+    <p class="note">Core installs are lean: stdlib + <code>cbor2</code>. The <code>[harness]</code> extra adds the
+    <code>mcp</code> package for <kbd>sigil serve</kbd>; <code>[dev]</code> adds pytest/hypothesis/ruff.</p>
+  </section>
+
+  <section>
+    <p class="gh4">2 · Everyday CLI</p>
+    <div class="step"><span class="sn">2.1</span><div><b>Lift existing Python</b> — parse-only, never executes your code. Add <kbd>--json</kbd> for machines.</div></div>
+    <div class="term copy"><button class="cp">copy</button><pre>sigil lift path/to/your/code
+<span class="c">; one line per definition:</span>
+<span class="h">#d4b8</span> fetch_user(user_id) -> ? <span class="e">!clock !fs !net</span></pre></div>
+    <div class="step"><span class="sn">2.2</span><div><b>Build a Sigil module</b> — transpiles to Python, checks the effect budget statically,
+      registers goals in a <code>.sigil/</code> store.</div></div>
+    <div class="term copy"><button class="cp">copy</button><pre>sigil build prices.sg --store . --json
+<span class="c"># writes prices.py + test_fetch_prices.py; prints goal hashes</span></pre></div>
+    <div class="step"><span class="sn">2.3</span><div><b>Verify a goal</b> — subprocess-isolated, timeout-guarded, cached by (goal, impl) hash.
+      Goals with <code>in:</code> parameters need an inputs file.</div></div>
+    <div class="term copy"><button class="cp">copy</button><pre>echo '{"tickers": ["AAPL"], "start": "a", "end": "b"}' > inputs.json
+sigil verify '#a1b2c3d4' --store . --inputs inputs.json
+<span class="c"># verify fetch_prices: </span><span class="ok">pass</span><span class="c"> (140ms) → goal status: verified · re-runs are &lt;50ms cache hits</span></pre></div>
+    <p class="note">Exit codes: <kbd>0</kbd> ok / verify pass · <kbd>1</kbd> verify fail · <kbd>2</kbd> usage or build rejection · <kbd>3</kbd> unexpected (never a traceback).
+    Set <kbd>SIGIL_RELEASE=1</kbd> to strip contract assertions from transpiled code in production.</p>
+  </section>
+
+  <section>
+    <p class="gh4">3 · MCP — wire your agent in</p>
+    <div class="step"><span class="sn">3.1</span><div><b>Claude Code</b> (one line):</div></div>
+    <div class="term copy"><button class="cp">copy</button><pre>claude mcp add sigil -- sigil serve --root /path/to/your/repo</pre></div>
+    <div class="step"><span class="sn">3.2</span><div><b>Claude Desktop / Cowork / any MCP client</b> — stdio server config:</div></div>
+    <div class="term copy"><button class="cp">copy</button><pre>{
+  "mcpServers": {
+    "sigil": { "command": "sigil", "args": ["serve", "--root", "/path/to/your/repo"] }
+  }
+}</pre></div>
+    <div class="step"><span class="sn">3.3</span><div><b>The tools your agent gets</b> — and the loop it should run:</div></div>
+    <div class="card" style="padding:10px 6px 4px;margin-bottom:16px">
+    <table class="gtable">
+      <tr><th>tool</th><th>what it does</th></tr>
+      <tr><td>lift(path)</td><td>Python → digest sheet; idempotent; changes append <code>#old → #new</code></td></tr>
+      <tr><td>sheet()</td><td>the append-only session sheet (R1) — agents read this, not files</td></tr>
+      <tr><td>expand(hash, form?)</td><td>readable source (default) or <code>form="canonical"</code> — the patchable data form; derive patch paths from it (R2)</td></tr>
+      <tr><td>load_module(source)</td><td>create goals over pure MCP: registers a Sigil module's goals + fns in the store (v1.0.1)</td></tr>
+      <tr><td>patch(hash, ops, inputs?)</td><td>AST edit → new hash, <b>auto-verified</b> before success (R3)</td></tr>
+      <tr><td>verify(goal, inputs?)</td><td>run verify clauses; subprocess + timeout; cached; pass ⇒ binds</td></tr>
+      <tr><td>session_close()</td><td>stats + compacted sheet for the next session</td></tr>
+    </table></div>
+    <div class="term"><div class="tbar"><div class="dot" style="background:#fb7185"></div><div class="dot" style="background:#fbbf24"></div><div class="dot" style="background:#34d399"></div><span>the loop, as the agent sees it</span></div>
+    <pre>sheet() <span class="c">→ read digests, pick the failing goal</span>
+expand(<span class="h">#6e01</span>) <span class="c">→ see only the code you'll change</span>
+patch(<span class="h">#6e01</span>, [{"path": "body.stmts.0.value.right.val", "op": "replace", "value": "3"}],
+      inputs={"n": 4})
+<span class="c">→ {"new_hash": "</span><span class="h">#a4c2</span><span class="c">", "verify": {"status": "</span><span class="ok">pass</span><span class="c">"}}  — verified before you ever see "done"</span></pre></div>
+  </section>
+
+  <section>
+    <p class="gh4">4 · Patch ops in 30 seconds</p>
+    <p class="mini" style="margin-bottom:14px">Ops address the canonical form shown by <code>expand</code>. Path tokens are dict keys,
+    list indices, or host-AST field names; <code>op</code> ∈ <kbd>replace</kbd> <kbd>insert</kbd> <kbd>delete</kbd>.
+    Literals end in <code>.val</code>. Malformed ops fail with the op index + failing token (<code>code: bad_path</code>) —
+    re-<code>expand</code> and re-derive, don't guess twice.</p>
+    <div class="term copy"><button class="cp">copy</button><pre><span class="c">-- Sigil-written fn: change a constant</span>
+{"path": "body.stmts.0.value.right.val", "op": "replace", "value": "3"}
+<span class="c">-- lifted Python: host AST sits under body.data; derive paths from expand(hash, form="canonical")</span>
+{"path": "body.data.body.0.value.2", "op": "replace", "value": "30.0"}
+<span class="c">-- grow / shrink statement lists</span>
+{"path": "body.stmts.1", "op": "insert", "value": { ...stmt data... }}
+{"path": "body.stmts.1", "op": "delete"}</pre></div>
+  </section>
+
+  <section>
+    <p class="gh4">5 · Skills — teach your agent the house rules</p>
+    <p class="mini" style="margin-bottom:14px">The repo ships agent skills in <code>.claude/skills/</code> — Claude Code picks them up
+    automatically when working in this repo (Cowork: add the folder's skills via Settings → Capabilities).
+    One is for <b>using</b> Sigil; five govern <b>developing</b> Sigil itself.</p>
+    <div class="card" style="padding:10px 6px 4px">
+    <table class="gtable">
+      <tr><th>skill</th><th>consult when…</th></tr>
+      <tr><td>sigil-agent-workflow <span class="ok">★ for users</span></td><td>connected to any <code>sigil serve</code> server — the sheet→expand→patch→verify discipline, real patch-path shapes, failure playbook</td></tr>
+      <tr><td>sigil-canonical-hashing</td><td>touching core AST, canonicalization, or anything hash-stability</td></tr>
+      <tr><td>sigil-effect-inference</td><td>touching the effect analyzer, fixtures, or chasing a wrong effect row</td></tr>
+      <tr><td>sigil-transpile-verify</td><td>parser/printer, transpiler, grammar, or verify-runner work</td></tr>
+      <tr><td>sigil-harness-rules</td><td>harness/server work — the frozen tool contract and R1–R3</td></tr>
+      <tr><td>sigil-quality-gates</td><td>before claiming a phase done or cutting a release</td></tr>
+    </table></div>
+  </section>
+
+  <section>
+    <p class="gh4">6 · Troubleshooting</p>
+    <div class="card" style="padding:10px 6px 4px">
+    <table class="gtable">
+      <tr><th>symptom</th><th>meaning → remedy</th></tr>
+      <tr><td>build: "effect budget exceeded"</td><td>implementation uses an effect the goal doesn't budget — the message names the call chain; remove the call or extend <code>fx:</code></td></tr>
+      <tr><td>build: "!unsafe without an ack:"</td><td>unsafe budgets must be acknowledged — add <code>ack: "reason"</code> to the goal</td></tr>
+      <tr><td>verify: "needs inputs"</td><td>goal declares <code>in:</code> params — pass <kbd>--inputs file.json</kbd> keyed by param names</td></tr>
+      <tr><td>verify: timeout</td><td>implementation or clause ran &gt; 10s — raise <kbd>--timeout</kbd> or fix the loop; timeouts never bind and are never cached</td></tr>
+      <tr><td>patch: code "bad_path"</td><td>path token doesn't exist — <code>expand</code> the hash and rebuild the path from what you see</td></tr>
+      <tr><td>verify hangs/times out via serve</td><td>fixed in v1.0.1 (verify child inherited the MCP stdin pipe) — upgrade; verdicts now return in ms</td></tr>
+      <tr><td>sigil --version shows 1.27.x</td><td>that's an unrelated PyPI package named "sigil" shadowing this one — <kbd>pip uninstall sigil</kbd>, then install this repo (dist name <code>sigil-lang</code>)</td></tr>
+      <tr><td>serve: "mcp not installed"</td><td><kbd>pip install "sigil[harness]"</kbd></td></tr>
+      <tr><td>a row says !unsafe?</td><td>not an error — the analyzer refuses to guess about dynamic code; treat as effectful until verified</td></tr>
+    </table></div>
+    <p class="note" style="margin-top:18px">Deeper dives: <code>docs/quickstart.md</code> · <code>docs/language-guide.md</code> ·
+    <code>docs/harness-guide.md</code> · <code>docs/lifting-guide.md</code> · <code>docs/cost-model.md</code> · <code>docs/limitations.md</code></p>
+  </section>
+</div><!-- /view-guide -->
+
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+/* ---- explainer player (mirrors video/src timings, 30fps timeline) ---- */
+(function(){
+  const stage = document.getElementById('vstage');
+  if (!stage) return;
+  const scenes = [...stage.querySelectorAll('.vscene')].map(el => ({el, dur: +el.dataset.dur}));
+  const TOTAL = scenes.reduce((a, s) => a + s.dur, 0);
+  const FPS = 30, FADE = 14;
+  let frame = 0, playing = false, raf = null, last = null;
+
+  // upgrade to the rendered MP4 when it exists
+  const mp4 = document.getElementById('vmp4');
+  mp4.addEventListener('loadeddata', () => {
+    document.getElementById('stagewrap').style.display = 'none';
+    document.querySelector('.vbar').style.display = 'none';
+    mp4.style.display = 'block';
+  });
+  mp4.addEventListener('error', () => {});
+
+  function fitStage(){
+    const w = document.getElementById('stagewrap').clientWidth;
+    stage.style.transform = `scale(${w / 1280})`;
+  }
+  addEventListener('resize', fitStage); fitStage();
+
+  function fmt(f){
+    const sec = Math.floor(f / FPS);
+    return `${Math.floor(sec / 60)}:${String(sec % 60).padStart(2, '0')}`;
+  }
+
+  function render(){
+    let at = 0, idx = 0, local = 0;
+    for (let i = 0; i < scenes.length; i++){
+      if (frame < at + scenes[i].dur || i === scenes.length - 1){ idx = i; local = frame - at; break; }
+      at += scenes[i].dur;
+    }
+    scenes.forEach((s, i) => {
+      const active = i === idx;
+      s.el.classList.toggle('active', active);
+      if (!active){ s.el.style.opacity = 0; return; }
+      const d = s.dur;
+      const o = Math.min(local / FADE, 1, Math.max((d - local) / FADE, 0));
+      s.el.style.opacity = Math.max(0, o);
+      for (const el of s.el.querySelectorAll('[data-at]')) {
+        el.classList.toggle('on', local >= +el.dataset.at);
+      }
+      for (const el of s.el.querySelectorAll('[data-count]')) {
+        const from = +el.dataset.from, to = +el.dataset.to;
+        const st = +el.dataset.start, cd = +el.dataset.cdur, dec = +(el.dataset.dec || 0);
+        const t = Math.min(Math.max((local - st) / cd, 0), 1);
+        const v = from + (to - from) * t;
+        el.textContent = dec ? v.toFixed(dec) : Math.round(v).toLocaleString('en-US');
+      }
+      for (const el of s.el.querySelectorAll('[data-type]')) {
+        const text = el.dataset.text, st = +el.dataset.start;
+        const n = Math.max(0, Math.floor((local - st) * 1.4));
+        el.textContent = text.slice(0, n) + (n > 0 && n < text.length ? '▍' : '');
+      }
+    });
+    document.getElementById('vfill').style.width = `${(frame / TOTAL) * 100}%`;
+    document.getElementById('vtimer').textContent = `${fmt(frame)} / ${fmt(TOTAL)}`;
+  }
+
+  function tick(ts){
+    if (!playing) return;
+    if (last !== null) frame = Math.min(TOTAL, frame + ((ts - last) / 1000) * FPS);
+    last = ts;
+    render();
+    if (frame >= TOTAL){ pause(); frame = TOTAL; }
+    else raf = requestAnimationFrame(tick);
+  }
+  function play(){
+    if (frame >= TOTAL) frame = 0;
+    playing = true; last = null;
+    document.getElementById('vplay').textContent = '❚❚ pause';
+    raf = requestAnimationFrame(tick);
+  }
+  function pause(){
+    playing = false;
+    if (raf) cancelAnimationFrame(raf);
+    document.getElementById('vplay').textContent = '▶ play';
+  }
+  document.getElementById('vplay').addEventListener('click', () => playing ? pause() : play());
+  document.getElementById('vrestart').addEventListener('click', () => { frame = 0; render(); if (!playing) play(); });
+  document.getElementById('vprog').addEventListener('click', (e) => {
+    const r = e.currentTarget.getBoundingClientRect();
+    frame = TOTAL * ((e.clientX - r.left) / r.width);
+    render();
+  });
+  // autoplay once when scrolled into view; pause when hidden
+  let played = false;
+  new IntersectionObserver((entries) => {
+    for (const en of entries){
+      if (en.isIntersecting && !played){ played = true; play(); }
+      else if (!en.isIntersecting && playing){ pause(); }
+    }
+  }, {threshold: 0.35}).observe(stage.parentElement);
+  render();
+})();
+
+function showTab(name){
+  const home = document.getElementById('view-home');
+  const guide = document.getElementById('view-guide');
+  const isGuide = name === 'guide';
+  home.hidden = isGuide; guide.hidden = !isGuide;
+  document.getElementById('tab-home').classList.toggle('active', !isGuide);
+  document.getElementById('tab-guide').classList.toggle('active', isGuide);
+  history.replaceState(null, '', isGuide ? '#guide' : '#');
+  scrollTo({top: 0});
+}
+addEventListener('DOMContentLoaded', () => {
+  if (location.hash === '#guide') showTab('guide');
+  for (const btn of document.querySelectorAll('.copy .cp')){
+    btn.addEventListener('click', () => {
+      const text = btn.parentElement.querySelector('pre').innerText;
+      navigator.clipboard.writeText(text).then(() => {
+        btn.textContent = 'copied'; setTimeout(() => btn.textContent = 'copy', 1200);
+      });
+    });
+  }
+});
+(function(){
+  const canvas = document.getElementById('bg');
+  const renderer = new THREE.WebGLRenderer({canvas, antialias:true, alpha:true});
+  renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+  const scene = new THREE.Scene();
+  scene.fog = new THREE.FogExp2(0x07090f, 0.055);
+  const camera = new THREE.PerspectiveCamera(58, 1, 0.1, 100);
+  camera.position.set(0, 0, 16);
+
+  // --- a content-addressed constellation: nodes (definitions) + edges (call graph)
+  const N = 136;                                   // one node per passing test, naturally
+  const nodes = [];
+  const group = new THREE.Group();
+  const geoA = new THREE.IcosahedronGeometry(0.16, 0);
+  const geoB = new THREE.BoxGeometry(0.18, 0.18, 0.18);
+  const matCyan  = new THREE.MeshBasicMaterial({color:0x5eead4, wireframe:true, transparent:true, opacity:.85});
+  const matViolet= new THREE.MeshBasicMaterial({color:0xa78bfa, wireframe:true, transparent:true, opacity:.8});
+  const matDim   = new THREE.MeshBasicMaterial({color:0x44506b, wireframe:true, transparent:true, opacity:.65});
+  for (let i = 0; i < N; i++){
+    const r = 7 + Math.random()*9;
+    const th = Math.random()*Math.PI*2, ph = Math.acos(2*Math.random()-1);
+    const m = new THREE.Mesh(Math.random()<.5?geoA:geoB,
+      Math.random()<.16?matCyan:(Math.random()<.5?matViolet:matDim));
+    m.position.set(r*Math.sin(ph)*Math.cos(th)*1.35, r*Math.sin(ph)*Math.sin(th)*.6, r*Math.cos(ph)*.55 - 4);
+    m.userData = {s: .2 + Math.random()*.8, p: Math.random()*Math.PI*2};
+    nodes.push(m); group.add(m);
+  }
+  // edges between near nodes
+  const pts = [];
+  for (let i = 0; i < N; i++) for (let j = i+1; j < N; j++){
+    if (nodes[i].position.distanceTo(nodes[j].position) < 2.6){
+      pts.push(nodes[i].position.clone(), nodes[j].position.clone());
+    }
+  }
+  const edgeGeo = new THREE.BufferGeometry().setFromPoints(pts);
+  group.add(new THREE.LineSegments(edgeGeo,
+    new THREE.LineBasicMaterial({color:0x2dd4bf, transparent:true, opacity:.13})));
+  scene.add(group);
+
+  // soft drifting particles
+  const pGeo = new THREE.BufferGeometry();
+  const pPos = new Float32Array(900);
+  for (let i = 0; i < pPos.length; i++) pPos[i] = (Math.random()-0.5)*46;
+  pGeo.setAttribute('position', new THREE.BufferAttribute(pPos, 3));
+  scene.add(new THREE.Points(pGeo,
+    new THREE.PointsMaterial({color:0x8b94a7, size:.045, transparent:true, opacity:.5})));
+
+  let mx = 0, my = 0, sy = 0;
+  addEventListener('mousemove', e => {
+    mx = (e.clientX/innerWidth - .5); my = (e.clientY/innerHeight - .5);
+  });
+  addEventListener('scroll', () => { sy = scrollY; }, {passive:true});
+
+  function resize(){
+    renderer.setSize(innerWidth, innerHeight, false);
+    camera.aspect = innerWidth/innerHeight; camera.updateProjectionMatrix();
+  }
+  addEventListener('resize', resize); resize();
+
+  const clock = new THREE.Clock();
+  (function tick(){
+    const t = clock.getElapsedTime();
+    group.rotation.y = t*0.045 + mx*0.35;
+    group.rotation.x = Math.sin(t*0.12)*0.06 + my*0.22;
+    group.position.y = sy * -0.0016;
+    for (const n of nodes){
+      n.rotation.x = t*n.userData.s; n.rotation.y = t*n.userData.s*0.7;
+      n.position.y += Math.sin(t*0.6 + n.userData.p)*0.0009;
+    }
+    renderer.render(scene, camera);
+    requestAnimationFrame(tick);
+  })();
+})();
+</script>
+</body>
+</html>

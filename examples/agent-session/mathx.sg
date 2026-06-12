@@ -1,0 +1,16 @@
+module mathx
+
+goal triple {
+  intent: "triple the input"
+  in: n Int
+  out: Int
+  fx: pure
+  verify:
+    out == n * 3
+}
+
+fn triple(n Int) -> Int
+  pure
+{
+  ret n * 2
+}

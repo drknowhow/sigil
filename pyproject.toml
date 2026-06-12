@@ -1,0 +1,52 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "sigil-lang"  # PyPI name "sigil" is taken (firstuse N4, D-032); import + CLI stay `sigil`
+version = "1.0.1"
+description = "Contract-first, content-addressed language + toolchain for human-AI coding"
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "MIT" }
+dependencies = [
+    # cbor2: canonical CBOR serialization is the hash substrate (spec pillar 1;
+    # sorted-key definite-length encoding required by sigil-canonical-hashing).
+    "cbor2>=5.6",
+]
+
+[project.optional-dependencies]
+dev = [
+    # pytest: test runner for all phase exit gates (plan section 7).
+    "pytest>=8.0",
+    # hypothesis: property tests — hash stability under formatting noise,
+    # parser/printer round-trips (plan section 7).
+    "hypothesis>=6.100",
+    # ruff: lint + format gate required by CLAUDE.md commands.
+    "ruff>=0.4",
+]
+harness = [
+    # mcp: FastMCP server for the digest/expand/patch/verify harness (plan section 6).
+    # Added as an extra so core lift/transpile installs stay stdlib+cbor2 only.
+    "mcp>=1.0",
+]
+
+[project.scripts]
+sigil = "sigil.cli:entry"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+src = ["src", "tests"]
+# vendored OSS snapshot + hand-written effect fixtures are not lint targets
+extend-exclude = ["tests/fixtures", "seed", "examples/new-module/build"]  # generated output is not a lint target
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM"]

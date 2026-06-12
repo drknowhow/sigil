@@ -1,0 +1,8 @@
+{
+  "dispatch": [
+    "!unsafe?"
+  ],
+  "handler_for": [
+    "pure"
+  ]
+}

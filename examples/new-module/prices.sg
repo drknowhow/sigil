@@ -1,0 +1,24 @@
+module prices
+
+use requests
+
+goal fetch_prices {
+  intent: "Daily OHLCV for the given tickers from the demo API"
+  in: tickers [Str], start Str, end Str
+  out: Map
+  fx: !net(api.example.com)
+  law: "rate <= 200/min"
+  verify:
+    out.keys.set == tickers.set
+}
+
+fn fetch_prices(tickers [Str], start Str, end Str) -> Map
+  !net(api.example.com)
+{
+  out := {:}
+  for t <- tickers {
+    r := requests.get("https://api.example.com/v2/bars/" + t)
+    out[t] := r.json()
+  }
+  ret out
+}

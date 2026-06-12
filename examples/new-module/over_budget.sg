@@ -1,0 +1,31 @@
+module prices
+
+use requests
+
+goal fetch_prices {
+  intent: "Daily OHLCV — but this variant sneaks in a filesystem write"
+  in: tickers [Str], start Str, end Str
+  out: Map
+  fx: !net(api.example.com)
+  verify:
+    out.keys.set == tickers.set
+}
+
+fn fetch_prices(tickers [Str], start Str, end Str) -> Map
+  !net(api.example.com) !fs(./cache)
+{
+  out := {:}
+  for t <- tickers {
+    r := requests.get("https://api.example.com/v2/bars/" + t)
+    out[t] := r.json()
+    save_cache(t, "data")
+  }
+  ret out
+}
+
+fn save_cache(t Str, data Str)
+  !fs(./cache)
+{
+  f := open("./cache/" + t, "w")
+  f.write(data)
+}

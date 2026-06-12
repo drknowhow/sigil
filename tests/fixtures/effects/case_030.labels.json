@@ -1,0 +1,7 @@
+{
+  "fetch_with_jitter": [
+    "!fs",
+    "!net",
+    "!rand"
+  ]
+}

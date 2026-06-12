@@ -1,0 +1,155 @@
+"""Verify runner (plan Phase 3, sigil-transpile-verify skill).
+
+Hard rule: untrusted code never runs in-process. The transpiled module and
+every verify clause execute in a SUBPROCESS with a timeout (10s default).
+Verdicts are cached by (goal_hash, impl_hash) — content-addressed, never
+expire. Pass/fail are cached; timeout/error are transient and are not
+(decisions.md D-019). A passing run binds goal<->impl in the store; anything
+else leaves the goal provisional.
+"""
+
+from __future__ import annotations
+
+import json
+import subprocess
+import sys
+import time
+from dataclasses import dataclass, field
+
+from sigil.core.ast import Fn, Goal, Module
+from sigil.core.hash import digest_node
+from sigil.lang.printer import pexpr as sigil_text
+from sigil.transpile.python import texpr, transpile_module
+
+SENTINEL = "__SIGIL_VERDICT__"
+DEFAULT_TIMEOUT = 10.0
+
+
+@dataclass(frozen=True)
+class Verdict:
+    status: str  # pass | fail | timeout | error
+    goal_hash: str
+    impl_hash: str
+    clauses: list = field(default_factory=list)  # [(text, ok, detail)]
+    cached: bool = False
+    duration_ms: float = 0.0
+    detail: str | None = None  # stderr tail / exception (failures only)
+
+    def to_dict(self) -> dict:
+        return {
+            "status": self.status,
+            "goal_hash": self.goal_hash,
+            "impl_hash": self.impl_hash,
+            "clauses": self.clauses,
+            "duration_ms": round(self.duration_ms, 2),
+            "detail": self.detail,
+        }
+
+
+def _harness(goal: Goal, fn_name: str, inputs: dict) -> str:
+    """Per-clause evaluation code appended to the transpiled module."""
+    lines = [
+        "",
+        "import json as __json",
+        f"__inputs = __json.loads({json.dumps(json.dumps(inputs))})",
+        "__results = []",
+        f"__out = {fn_name}(**__inputs)",
+    ]
+    for v in goal.verify:
+        text, py = sigil_text(v.expr), texpr(v.expr)
+        bindings = "; ".join([f"{p.name} = __inputs[{p.name!r}]" for p in goal.inputs])
+        lines += [
+            "try:",
+            f"    out = __out; {bindings}" if bindings else "    out = __out",
+            f"    __ok = bool({py})",
+            "    __detail = None if __ok else 'out=' + repr(__out)[:300] + ' inputs=' + repr(__inputs)[:300]",  # noqa: E501
+            f"    __results.append(({text!r}, __ok, __detail))",
+            "except Exception as __e:",
+            f"    __results.append(({text!r}, False, repr(__e)[:300]))",
+        ]
+    lines += [
+        "print()",
+        f"print({SENTINEL!r} + __json.dumps(__results))",
+    ]
+    return "\n".join(lines)
+
+
+def run_verify(
+    store, module: Module, goal_name: str, inputs: dict | None, timeout: float = DEFAULT_TIMEOUT
+) -> Verdict:
+    goal = next((d for d in module.defs if isinstance(d, Goal) and d.name == goal_name), None)
+    if goal is None:
+        raise ValueError(
+            f"Goal {goal_name!r} not found in module {module.name!r}. "
+            "Remedy: check the goal name ('sigil lift' or the sheet lists goals)."
+        )
+    fn = next((d for d in module.defs if isinstance(d, Fn) and d.name == goal_name), None)
+    if fn is None:
+        raise ValueError(
+            f"Goal {goal_name!r} has no same-name implementation fn (decisions.md D-016). "
+            f"Remedy: define fn {goal_name}(...) in the module."
+        )
+    if inputs is None:
+        if goal.inputs:
+            names = ", ".join(p.name for p in goal.inputs)
+            raise ValueError(
+                f"Goal {goal_name!r} needs inputs ({names}) to run its verify clauses. "
+                "Remedy: pass --inputs <file.json> with a JSON object of those names."
+            )
+        inputs = {}
+
+    goal_hash, impl_hash = digest_node(goal), digest_node(fn)
+    cached = store.cache_get(goal_hash, impl_hash)
+    if cached is not None:
+        return Verdict(cached=True, **{**cached, "goal_hash": goal_hash, "impl_hash": impl_hash})
+
+    py_src = transpile_module(module).python_src
+    script = py_src + _harness(goal, goal_name, inputs)
+    t0 = time.perf_counter()
+    try:
+        proc = subprocess.run(
+            [sys.executable, "-c", script],
+            capture_output=True,
+            text=True,
+            timeout=timeout,
+            # stdin must NOT be inherited: under the stdio MCP transport the
+            # server's stdin IS the client's JSON-RPC pipe — an inherited
+            # handle deadlocks served verify and would let untrusted code
+            # read client traffic (firstuse report, 2026-06-12; D-029).
+            stdin=subprocess.DEVNULL,
+        )
+    except subprocess.TimeoutExpired:
+        ms = (time.perf_counter() - t0) * 1000
+        return Verdict(
+            status="timeout",
+            goal_hash=goal_hash,
+            impl_hash=impl_hash,
+            duration_ms=ms,
+            detail=f"verify exceeded {timeout}s and was killed; never binds",
+        )
+    ms = (time.perf_counter() - t0) * 1000
+
+    line = next((ln for ln in proc.stdout.splitlines() if ln.startswith(SENTINEL)), None)
+    if proc.returncode != 0 or line is None:
+        tail = (proc.stderr or proc.stdout).strip().splitlines()[-3:]
+        return Verdict(
+            status="error",
+            goal_hash=goal_hash,
+            impl_hash=impl_hash,
+            duration_ms=ms,
+            detail="; ".join(tail) or "no verdict produced",
+        )
+
+    clauses = [tuple(c) for c in json.loads(line[len(SENTINEL) :])]
+    status = "pass" if all(ok for _, ok, _ in clauses) else "fail"
+    verdict = Verdict(
+        status=status, goal_hash=goal_hash, impl_hash=impl_hash, clauses=clauses, duration_ms=ms
+    )
+    store.cache_put(
+        goal_hash,
+        impl_hash,
+        {"status": status, "clauses": clauses, "duration_ms": round(ms, 2), "detail": None},
+    )
+    if status == "pass":
+        store.bind(goal_hash, impl_hash)  # binding only on pass
+    return verdict

@@ -1,0 +1,20 @@
+module dedupe101
+
+goal dedupe {
+  intent: "Order-preserving dedupe: same elements, no duplicates, never longer"
+  in: xs [Int]
+  out: [Int]
+  fx: pure
+  verify:
+    out.set == xs.set
+    out.len == out.set.len
+    out.len ≤ xs.len
+}
+
+fn dedupe(xs [Int]) -> [Int]
+  pure
+  post |r| r.set == xs.set ∧ r.len ≤ xs.len
+{
+  s := {}
+  ret [x | x <- xs, s.insert(x)]
+}
