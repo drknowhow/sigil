@@ -1,5 +1,11 @@
 # STATUS
 
+## Session 2026-06-12 (published)
+
+- **Repository:** https://github.com/drknowhow/sigil (private; verified anonymous
+  access 404s). Initial import pushed by the user's agent (392d6b2); v1.0.1 tag
+  created locally — push pending from a credentialed machine.
+
 ## Session 2026-06-12 (v1.0.1 — first-use report fixes)
 
 - **External first-use report received** (firstuse/FIRST_USE_REPORT.md) — first real
