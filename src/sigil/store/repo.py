@@ -172,12 +172,55 @@ class Store:
             return f"{self.display(goal_hash)} goal {name} provisional"
         return f"{self.display(goal_hash)} goal {name} verified -> {self.display(b['impl'])}"
 
-    # ---- verify verdict cache --------------------------------------------------
-    def cache_get(self, goal_hash: str, impl_hash: str) -> dict | None:
-        p = self.vcache / f"{goal_hash}-{impl_hash}.json"
+    # ---- recorded inputs (v1.2, D-020 revisited deliberately) -------------------
+    def record_inputs(self, goal_hash: str, inputs: dict) -> None:
+        index = self._read_index()
+        index["goals"].setdefault(goal_hash, {"name": "?", "module": None})
+        index["goals"][goal_hash]["inputs"] = inputs
+        self._write_index(index)
+
+    def recorded_inputs(self, goal_hash: str) -> dict | None:
+        """Inline registry inputs, else the goal's inputs_ref file (resolved
+        against the store root), else the inputs_file registry path."""
+        entry = self._read_index()["goals"].get(goal_hash, {})
+        if "inputs" in entry:
+            return entry["inputs"]
+        ref = entry.get("inputs_file")
+        if ref is None:
+            try:
+                node = self.get(goal_hash)
+                ref = getattr(node, "inputs_ref", None)
+            except ValueError:
+                ref = None
+        if ref is None:
+            return None
+        p = Path(ref)
+        if not p.is_absolute():
+            p = self.dir.parent / p
+        if not p.exists():
+            raise ValueError(
+                f"Recorded-inputs file {ref!r} for goal {self.display(goal_hash)} "
+                f"not found at {p}. Remedy: create it (a JSON object keyed by the "
+                "goal's input names) or pass inputs explicitly."
+            )
+        return json.loads(p.read_text())
+
+    def append_counterexample(self, goal_hash: str, case: dict) -> None:
+        index = self._read_index()
+        entry = index["goals"].setdefault(goal_hash, {"name": "?", "module": None})
+        entry.setdefault("counterexamples", []).append(case)
+        if "inputs" not in entry and "inputs_file" not in entry:
+            entry["inputs"] = case  # the counterexample becomes the recorded input
+        self._write_index(index)
+
+    # ---- verify verdict cache (keyed goal+impl+inputs, v1.2) --------------------
+    def cache_get(self, goal_hash: str, impl_hash: str, inputs_hash: str = "-") -> dict | None:
+        p = self.vcache / f"{goal_hash}-{impl_hash}-{inputs_hash}.json"
         return json.loads(p.read_text()) if p.exists() else None
 
-    def cache_put(self, goal_hash: str, impl_hash: str, verdict: dict) -> None:
-        (self.vcache / f"{goal_hash}-{impl_hash}.json").write_text(
+    def cache_put(
+        self, goal_hash: str, impl_hash: str, verdict: dict, inputs_hash: str = "-"
+    ) -> None:
+        (self.vcache / f"{goal_hash}-{impl_hash}-{inputs_hash}.json").write_text(
             json.dumps(verdict, sort_keys=True)
         )

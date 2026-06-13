@@ -112,8 +112,11 @@ def test_timeouts_are_not_cached(tmp_path) -> None:
 def test_crashing_impl_is_subprocess_isolated(tmp_path) -> None:
     store = Store.create(tmp_path)
     v = run_verify(store, parse_module(CRASH), "triple", inputs={"n": 3})
-    assert v.status == "error"  # and this process is alive to assert it
-    assert "undefined_helper" in (v.detail or "")
+    # v1.2: per-case call exceptions are caught in the child -> structured
+    # 'fail' with the exception as clause detail (still subprocess-isolated,
+    # still never binds). This process is alive to assert it.
+    assert v.status == "fail"
+    assert any("undefined_helper" in (d or "") for _t, ok, d in v.clauses if not ok)
     gh, _ = _hashes(CRASH)
     assert store.status(gh) == "provisional"
 

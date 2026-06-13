@@ -1,5 +1,24 @@
 # Changelog
 
+## v1.2.0 — 2026-06-12 (close the loop: roadmap-next wave 2)
+
+- **Recorded inputs** (prerequisite, D-020 revisited): goals carry
+  `inputs: "file.json"`, `@sigil.bind(inputs=...)` records inline; the runner
+  resolves them when the caller passes none. Verdict cache key now includes
+  the inputs digest.
+- **`sigil check [paths] [--against REF]`** (P1.4): rebuilds every .sg,
+  re-verifies every goal with recorded inputs; with --against also fails on
+  contracts dropped since the base ref without a tombstone. Exit 1 on any
+  regression — one line in CI.
+- **`sigil watch`** (P1.3): stdlib polling daemon — save → rebuild/relint →
+  re-verify touched goals; Python files are checked against `__sigil_fx__`.
+- **Property generation** (P2.7 modified): deterministic typed-contract input
+  generation (`run_property_check`, `sigil verify --gen N`); counterexamples
+  append to the store permanently and become the recorded input when none
+  exists.
+- Verify harness evaluates many cases per subprocess; crashing implementations
+  now return structured `fail` with the exception as clause detail.
+
 ## v1.1.0 — 2026-06-12 (depth: roadmap-next wave 1)
 
 - **Effect modes + module budgets** (P0.1): `!fs.read(path)` / `!fs.write`,

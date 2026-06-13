@@ -161,6 +161,21 @@ def cmd_verify(args: argparse.Namespace) -> int:
             return 2
         module = store.get(entry["module"])
         inputs = json.loads(Path(args.inputs).read_text()) if args.inputs else None
+        if args.gen:
+            from sigil.verify.propgen import run_property_check
+
+            report = run_property_check(store, goal_hash, n=args.gen, timeout=args.timeout)
+            print(
+                json.dumps(report, indent=2)
+                if args.json
+                else f"property check: {report['status']} over {report['cases']} cases"
+                + (
+                    f"; counterexamples recorded: {len(report['counterexamples'])}"
+                    if report["counterexamples"]
+                    else ""
+                )
+            )
+            return 0 if report["status"] == "pass" else 1
         verdict = run_verify(store, module, goal.name, inputs, timeout=args.timeout)
     except ValueError as exc:
         print(f"sigil verify: {exc}", file=sys.stderr)
@@ -181,6 +196,113 @@ def cmd_verify(args: argparse.Namespace) -> int:
             print(f"  {verdict.detail}")
         print(f"  goal status: {store.status(verdict.goal_hash)}")
     return 0 if verdict.status == "pass" else 1
+
+
+def cmd_check(args: argparse.Namespace) -> int:
+    """CI regression gate (v1.2): rebuild every .sg, verify every goal with
+    recorded inputs; --against REF also fails on silently dropped contracts."""
+    import subprocess as sp
+    import tempfile
+
+    from sigil.core.ast import Goal
+    from sigil.lang.parser import parse_module
+    from sigil.store.repo import Store
+    from sigil.transpile.build import BuildError, build_source
+    from sigil.verify.runner import run_verify
+
+    roots = [Path(p) for p in (args.paths or ["."])]
+    sg_files = sorted({f for r in roots for f in ([r] if r.is_file() else r.rglob("*.sg"))})
+    if not sg_files:
+        print("sigil check: no .sg files found. Remedy: pass project paths.", file=sys.stderr)
+        return 2
+    store = Store.create(Path(tempfile.mkdtemp(prefix="sigil-check-")))
+    failures = 0
+    head_goals: set[str] = set()
+    for f in sg_files:
+        src = f.read_text(encoding="utf-8")
+        try:
+            build_source(src, name=str(f))
+        except BuildError as exc:
+            print(f"check: {f}: build rejected\n{exc}")
+            failures += 1
+            continue
+        mod = parse_module(src)
+        mh = store.put(mod)
+        for d in mod.defs:
+            if not isinstance(d, Goal):
+                continue
+            head_goals.add(d.name)
+            gh = store.put(d)
+            extra = {}
+            if d.inputs_ref:
+                extra["inputs_file"] = str(f.parent / d.inputs_ref)
+            store.register_goal(gh, module_hash=mh, name=d.name, extra=extra)
+            try:
+                inputs = store.recorded_inputs(gh)
+            except ValueError as exc:
+                print(f"check: {f.name}: goal {d.name} — {exc}")
+                failures += 1
+                continue
+            if inputs is None and d.inputs:
+                print(f"check: {f.name}: goal {d.name} skipped (no recorded inputs)")
+                continue
+            v = run_verify(store, mod, d.name, inputs, timeout=args.timeout)
+            print(f"check: {f.name}: goal {d.name} verify {v.status}")
+            if v.status != "pass":
+                failures += 1
+    if args.against:
+        base_goals: set[str] = set()
+        ls = sp.run(
+            ["git", "ls-tree", "-r", "--name-only", args.against],
+            capture_output=True,
+            text=True,
+            cwd=str(roots[0]),
+        )
+        for rel in ls.stdout.splitlines():
+            if not rel.endswith(".sg"):
+                continue
+            show = sp.run(
+                ["git", "show", f"{args.against}:{rel}"],
+                capture_output=True,
+                text=True,
+                cwd=str(roots[0]),
+            )
+            if show.returncode == 0:
+                try:
+                    for d in parse_module(show.stdout).defs:
+                        if isinstance(d, Goal):
+                            base_goals.add(d.name)
+                except ValueError:
+                    pass
+        tombstoned = set()
+        if args.store:
+            try:
+                ws = Store.open(Path(args.store))
+                tombstoned = {e["name"] for gh, e in ws.goals().items() if ws.tombstone(gh)}
+            except ValueError:
+                pass
+        dropped = base_goals - head_goals - tombstoned
+        for name in sorted(dropped):
+            print(
+                f"check: goal {name} dropped since {args.against} without a "
+                "tombstone (sigil unbind records intent)"
+            )
+            failures += 1
+    if failures:
+        print(f"check: FAILED ({failures} problem(s))")
+        return 1
+    print("check: all contracts hold")
+    return 0
+
+
+def cmd_watch(args: argparse.Namespace) -> int:
+    from sigil.harness.watch import watch_loop
+
+    try:
+        watch_loop(args.paths or ["."], args.store, interval=args.interval)
+    except KeyboardInterrupt:
+        print("sigil watch: stopped.")
+    return 0
 
 
 def cmd_unbind(args: argparse.Namespace) -> int:
@@ -257,7 +379,20 @@ def main(argv: list[str] | None = None) -> int:
     p_verify.add_argument("--store", default=".", help="directory containing .sigil/ (default .)")
     p_verify.add_argument("--inputs", help="JSON file with the goal's input values")
     p_verify.add_argument("--timeout", type=float, default=10.0, help="seconds (default 10)")
+    p_verify.add_argument("--gen", type=int, help="property mode: N generated input cases")
     p_verify.add_argument("--json", action="store_true", help="machine-readable output")
+
+    p_check = sub.add_parser("check", help="CI gate: rebuild + re-verify every contract")
+    p_check.add_argument("paths", nargs="*", help="project paths (default .)")
+    p_check.add_argument("--against", help="git ref: also fail on dropped contracts")
+    p_check.add_argument("--store", help="working store (tombstone exemptions)")
+    p_check.add_argument("--timeout", type=float, default=10.0)
+    p_check.add_argument("--json", action="store_true")
+
+    p_watch = sub.add_parser("watch", help="save -> re-lift -> re-verify, continuously")
+    p_watch.add_argument("paths", nargs="*", help="paths to watch (default .)")
+    p_watch.add_argument("--store", default=".", help="store directory")
+    p_watch.add_argument("--interval", type=float, default=2.0)
 
     p_unbind = sub.add_parser("unbind", help="retire a contract with a dated, reasoned tombstone")
     p_unbind.add_argument("ref", help="goal hash")
@@ -285,6 +420,10 @@ def main(argv: list[str] | None = None) -> int:
         return cmd_build(args)
     if args.command == "verify":
         return cmd_verify(args)
+    if args.command == "check":
+        return cmd_check(args)
+    if args.command == "watch":
+        return cmd_watch(args)
     if args.command == "unbind":
         return cmd_unbind(args)
     if args.command == "diff":

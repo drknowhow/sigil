@@ -190,3 +190,14 @@ analyzer only narrows to a mode on positive evidence (open() literal mode, os.pa
 predicate table, Path method names), never by guess. Goldens regenerated (7 rows in
 requests.sheet gained modes). Budget messages are mode-precise; the 1.0 golden message
 test updated accordingly.
+
+
+**D-035** (2026-06-12) — **v1.2 loop closure.** Recorded inputs resolve in order:
+registry inline -> registry inputs_file -> goal.inputs_ref (store-root relative).
+Verdict cache key extended to (goal, impl, inputs-digest) — the v1.0 key silently
+conflated different inputs; old vcache entries are orphaned, not migrated (re-verify is
+cheap and honest). `check` re-derives bind state by re-verification, never trusting a
+committed verdict (forgeability). Property generation is stdlib-seeded (not hypothesis)
+for runtime-dependency-free determinism; generators exist only for fully-typed goals.
+Crash-in-impl became structured per-case 'fail' (was whole-run 'error'); isolation
+unchanged.
