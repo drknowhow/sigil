@@ -22,8 +22,8 @@ def result_hash(script: str | Path, fn: str, args: list, timeout: float = 30.0) 
     r_args = ", ".join(json.dumps(a) for a in args)
     harness = (
         f"source({json.dumps(str(Path(script)))}); "
-        f"__res <- {fn}({r_args}); "
-        f'cat(paste(deparse(__res), collapse="\\n"))'
+        f".sigil_res <- {fn}({r_args}); "
+        f'cat(paste(deparse(.sigil_res), collapse="\\n"))'
     )
     proc = subprocess.run(
         ["Rscript", "-e", harness],
