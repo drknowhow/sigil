@@ -1,9 +1,10 @@
 # Sigil
 
 Contract-first, content-addressed language + toolchain for human–AI coding.
-Status: v1.0 build in progress — see `docs/STATUS.md`. Spec and plan in `docs/plan/`.
+Status: **v2.0.2 — released** (full v1.0.0 → v2.0.2 history in `CHANGELOG.md`).
+Build state in `docs/STATUS.md`; spec and plan in `docs/plan/`.
 
-## Quickstart (current state: Phases 0–1)
+## Quickstart
 
 ```bash
 pip install -e ".[dev]"
@@ -50,7 +51,8 @@ the workflow. Project hero page + quick guide: open `site/index.html`. Explainer
 - **`@sigil.bind`** — write plain Python; Sigil lifts on import and checks the budget statically.
 - **Multi-fn invariants** — `invariant { over: enc, dec  verify: dec(enc(x)) == x }`; patching
   either fn re-verifies.
-- **Tier-3 propose/validate** — `propose_contract` (provisional until verified) + the
+- **Tier-3 propose/validate** — `propose_contract` (provisional until verified; v2.0.2
+  validates proposals against *generated* inputs, not the proposer's own witness) + the
   `sigil from-pytest` draft bridge.
 
 Benchmarks (token reduction, verify-cache latency, effect accuracy, lift throughput): `docs/benchmarks.md` (v2.0.2; includes Tier-3 proposal-validation), reproducible via `python3 scripts/benchmark.py`.
