@@ -154,6 +154,37 @@ def bench_lift_throughput() -> dict:
             "defs_per_sec": round(defs / dt), "lines_per_sec": round(lines / dt)}
 
 
+def bench_proposal_validation() -> dict:
+    """Tier-3 (v2.0.2): a FALSE proposed rule must be refuted by generated
+    inputs and must NOT bind; a TRUE one binds with multi-case evidence.
+    Measures the exploit closure from firstuse/V2_REPORT_addendum.md."""
+    import tempfile
+
+    from sigil.harness.core import Harness
+
+    clamp = ("def clamp(x, lo, hi):\n    if x < lo:\n        return lo\n"
+             "    if x > hi:\n        return hi\n    return x\n")
+    with tempfile.TemporaryDirectory() as tmp:
+        h = Harness(tmp)
+        f = Path(tmp) / "m.py"
+        f.write_text(clamp)
+        h.lift(str(f))
+        fn = h.lifted_fns()["clamp"]
+        false_rule = h.propose_contract(fn, ["out == x"], inputs={"x": 5, "lo": 0, "hi": 10})
+        true_rule = h.propose_contract(fn, ["out == x or out == lo or out == hi"],
+                                       inputs={"x": 5, "lo": 0, "hi": 10})
+        false_bound = h.store.status(false_rule["goal_hash"]) == "verified"
+        true_bound = h.store.status(true_rule["goal_hash"]) == "verified"
+    return {
+        "false_rule_bound": false_bound,                       # must be False
+        "false_rule_counterexamples": len(false_rule["evidence"]["counterexamples"]),
+        "false_rule_cases_generated": false_rule["evidence"]["cases_generated"],
+        "true_rule_bound": true_bound,                         # must be True
+        "true_rule_supporting_cases": true_rule["evidence"]["supporting_cases"],
+        "exploit_closed": (not false_bound) and true_bound,
+    }
+
+
 def bench_ir_roundtrip() -> dict:
     """IR lower -> render -> re-lower is hash-stable across the OSS snapshot."""
     import ast as pyast
@@ -175,7 +206,7 @@ def bench_ir_roundtrip() -> dict:
 def main() -> None:
     name, count = get_tokenizer()
     result = {
-        "version": "2.0.1",
+        "version": "2.0.2",
         "tokenizer": name,
         "context_reduction": bench_context_reduction(count),
         "iteration_turn": bench_iteration(count),
@@ -183,6 +214,7 @@ def main() -> None:
         "effect_inference": bench_effects(),
         "lift_throughput": bench_lift_throughput(),
         "ir_roundtrip": bench_ir_roundtrip(),
+        "proposal_validation": bench_proposal_validation(),
     }
     if "--json" in sys.argv:
         print(json.dumps(result, indent=2))
@@ -210,6 +242,11 @@ def main() -> None:
     rt = result["ir_roundtrip"]
     print(f"\nIR round-trip: {rt['roundtrip_stable']}/{rt['modules_checked']} modules "
           f"hash-stable ({rt['stable_pct']}%)")
+    pv = result["proposal_validation"]
+    print(f"\nTier-3 proposal validation: false rule bound? {pv['false_rule_bound']} "
+          f"(refuted by {pv['false_rule_counterexamples']} counterexample(s) over "
+          f"{pv['false_rule_cases_generated']} generated cases); true rule verified over "
+          f"{pv['true_rule_supporting_cases']} cases; exploit_closed={pv['exploit_closed']}")
 
 
 

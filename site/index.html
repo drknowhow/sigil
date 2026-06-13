@@ -176,7 +176,7 @@
 
 <div id="view-home">
 <header>
-  <div class="tag">v2.0.1 · python + R · invariants · 185 tests · field-tested on Windows &amp; live MCP</div>
+  <div class="tag">v2.0.2 · python + R · invariants · 191 tests · field-tested on Windows &amp; live MCP</div>
   <h1>SIGIL</h1>
   <p class="sub">A <b>contract-first</b>, <b>content-addressed</b> language and toolchain for
   human&thinsp;↔&thinsp;AI coding. Intent is code. Effects are visible. Edits are patches.
@@ -185,7 +185,7 @@
     <div class="chip"><em>2</em> languages — Python &amp; R</div>
     <div class="chip"><em>6.0×</em> measured context reduction (requests 2.34.2)</div>
     <div class="chip"><em>~0.15ms</em> cached verify (78× vs cold)</div>
-    <div class="chip"><em>185</em> tests · 0 effect under-reports</div>
+    <div class="chip"><em>191</em> tests · 0 effect under-reports</div>
   </div>
   <div class="cta">
     <a class="btn primary" href="#watch">▶ Watch how it works (75s)</a>
@@ -313,9 +313,9 @@
         <div class="vscene" data-dur="300">
           <div class="vglow1"></div>
           <div class="vt vlabel" data-at="2" style="color:var(--violet)">measured, not estimated</div>
-          <div class="vt vbig" data-at="10" style="margin:8px 0 26px">v2.0.1 — every number is from the actual build</div>
+          <div class="vt vbig" data-at="10" style="margin:8px 0 26px">v2.0.2 — every number is from the actual build</div>
           <div class="vrow">
-            <div class="vcard vt" data-at="22"><div class="vstat"><span data-count data-from="0" data-to="185" data-start="26" data-cdur="40"></span></div><div class="vdim" style="font-size:15px">tests green · 92% core coverage</div></div>
+            <div class="vcard vt" data-at="22"><div class="vstat"><span data-count data-from="0" data-to="191" data-start="26" data-cdur="40"></span></div><div class="vdim" style="font-size:15px">tests green · 92% core coverage</div></div>
             <div class="vcard vt" data-at="36"><div class="vstat"><span data-count data-from="0" data-to="6.0" data-start="40" data-cdur="40" data-dec="1"></span>×</div><div class="vdim" style="font-size:15px">measured context reduction</div></div>
             <div class="vcard vt" data-at="50"><div class="vstat"><span data-count data-from="9" data-to="0" data-start="54" data-cdur="30"></span></div><div class="vdim" style="font-size:15px">effect under-reports / 35 fixtures</div></div>
             <div class="vcard vt" data-at="64"><div class="vstat">~0.15ms</div><div class="vdim" style="font-size:15px">cached verify hit (78× vs cold)</div></div>
@@ -442,7 +442,7 @@ patch <span class="h">#6e01</span> { body.stmts.0.value.right.val := <span class
 </section>
 
 <section id="results">
-  <h2>Measured results — benchmarked on v2.0.1</h2>
+  <h2>Measured results — benchmarked on v2.0.2</h2>
   <p class="lede">Real production BPE tokenizer, real artifacts, reproducible via
   <code>scripts/benchmark.py</code> (full report in <code>docs/benchmarks.md</code>). Where
   measurement contradicted the spec's estimates, the measured number won.</p>
@@ -468,7 +468,7 @@ patch <span class="h">#6e01</span> { body.stmts.0.value.right.val := <span class
       patch — sheet 19 (cached) + expand 19 + patch 29 out, vs 60 to re-read even a tiny module. Output scales with the change.</p></div>
     <div class="card"><h3>IR round-trip</h3><p><b class="pos" style="font-size:26px">100%</b><br>of the 19 requests modules are
       hash-stable through lower → render → re-lower — the property that lets patches and <code>expand</code> ride on the neutral IR.</p></div>
-    <div class="card"><h3>Build quality</h3><p><b class="pos" style="font-size:26px">185</b><br>tests green · 92% coverage on
+    <div class="card"><h3>Build quality</h3><p><b class="pos" style="font-size:26px">191</b><br>tests green · 92% coverage on
       core/lift/transpile · ruff clean · property-tested hashing, round-trips, patch≡re-lift, R1 · CI on Linux 3.11–3.13 + Windows.</p></div>
   </div>
 </section>
@@ -523,7 +523,17 @@ patch <span class="h">#6e01</span> { body.stmts.0.value.right.val := <span class
       written as a failing test before the feature it gates.</p>
       <div class="chartbox" id="chart-tests"></div>
       <p class="chartcap"><b>What it means:</b> coverage of behavior grew with capability, never traded away.
-      <span class="up">130 → 185 tests</span> across six releases; <span class="new">+ R, invariants, IR round-trip</span> property tests in v2.</p>
+      <span class="up">130 → 191 tests</span> across seven releases; <span class="new">+ R, invariants, IR round-trip</span> property tests in v2.</p>
+    </div>
+
+    <div class="chartcard">
+      <h3>Tier-3 validation — agent can't grade its own homework (v2.0.2)</h3>
+      <p class="what">A proposed rule is checked against <em>independently generated</em> inputs, not the
+      witness the agent chose. Measured on the report's <code>clamp</code> exploit.</p>
+      <div class="chartbox" id="chart-propose"></div>
+      <p class="chartcap"><b>What it means:</b> the false rule <code>out == x</code> that earned a lucky
+      <code>verified</code> before is now <b>refuted by a generated counterexample</b> and stays provisional;
+      a genuinely true rule still verifies over 40 cases. <span class="new">Hardened in v2.0.2.</span></p>
     </div>
 
     <div class="chartcard">
@@ -890,6 +900,7 @@ patch(<span class="h">#6e01</span>, [{"path": "body.stmts.0.value.right.val", "o
     {label:'v1.2', value:33, disp:'33'},
     {label:'v2.0', value:35, disp:'35'},
     {label:'v2.0.1', value:35, disp:'35'},
+    {label:'v2.0.2', value:35, disp:'35'},
   ], {color:C.violet, max:42}));
   set('chart-tests', vtrend([
     {label:'v1.0.0', value:130, disp:'130'},
@@ -898,11 +909,17 @@ patch(<span class="h">#6e01</span>, [{"path": "body.stmts.0.value.right.val", "o
     {label:'v1.2.0', value:166, disp:'166'},
     {label:'v2.0.0', value:178, disp:'178'},
     {label:'v2.0.1', value:185, disp:'185'},
-  ], {color:C.cyan, max:210}));
+    {label:'v2.0.2', value:191, disp:'191'},
+  ], {color:C.cyan, max:215}));
   set('chart-v2', hbars([
     {label:'IR round-trip', frac:1.0,  color:C.cyan,   disp:'100% stable (19/19)'},
     {label:'lift throughput', frac:0.78, color:C.violet, disp:'~3,800 defs/s'},
     {label:'languages', frac:1.0, color:C.amber, disp:'Python + R'},
+  ]));
+  set('chart-propose', hbars([
+    {label:'false rule bound?', frac:0.02, color:C.red,    disp:'never (0 / 60 cases)'},
+    {label:'counterexamples found', frac:0.05, color:C.cyan, disp:'3 — refutes the false rule'},
+    {label:'true rule verified', frac:1.0,  color:C.cyan,   disp:'40 cases, 0 counterexamples'},
   ]));
 })();
 /* ---- explainer player (mirrors video/src timings, 30fps timeline) ---- */
@@ -1038,7 +1055,7 @@ addEventListener('DOMContentLoaded', () => {
   camera.position.set(0, 0, 16);
 
   // --- a content-addressed constellation: nodes (definitions) + edges (call graph)
-  const N = 185;                                   // one node per passing test, naturally
+  const N = 191;                                   // one node per passing test, naturally
   const nodes = [];
   const group = new THREE.Group();
   const geoA = new THREE.IcosahedronGeometry(0.16, 0);

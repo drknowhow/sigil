@@ -1,4 +1,4 @@
-# Benchmarks — Sigil v2.0.1
+# Benchmarks — Sigil v2.0.2
 
 Every number is produced by `scripts/benchmark.py` from the actual package and
 artifacts in this repo. Token counts use a real production BPE tokenizer (the
@@ -82,7 +82,7 @@ the read/write-mode and `!db` cases added in v1.1.
 
 ![Test suite growth](img/bench-tests.svg)
 
-130 → 185 tests across six releases (v1.0.0 → v2.0.1); every release shipped
+130 → 191 tests across seven releases (v1.0.0 → v2.0.2); every release shipped
 with the full suite green and tagged, each exit gate written as a failing test first.
 
 ## Lift throughput
@@ -95,6 +95,20 @@ with the full suite green and tagged, each exit gate written as a failing test f
 
 Lifting is parse + canonicalize + hash; no code executes. A full mid-size
 library lifts in well under a second.
+
+## Tier-3 proposal validation (v2.0.2)
+
+A Tier-3 agent proposal is validated against *independently generated* inputs,
+never the witness the proposer chose. Measured on the report's exploit
+(`clamp(x, lo, hi)`):
+
+| proposed rule | generated cases | outcome |
+|---|---|---|
+| `out == x` (false; holds only when x is in range) | 60 | **refuted** — 3 counterexamples; stays `provisional` |
+| `out == x or out == lo or out == hi` (true) | 40 applicable | **verified** — 0 counterexamples |
+
+The same proposer input (`x=5`) that earned a false `verified` before v2.0.2 is
+now refuted by inputs the proposer never picked. `exploit_closed = true`.
 
 ## IR round-trip stability (v2.0)
 
