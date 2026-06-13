@@ -1,0 +1,17 @@
+module pricing
+
+goal apply_discount {
+  intent: "Apply a percent-off discount to a price; never negative, never above the original."
+  in: price Int, pct Int
+  out: Int
+  fx: pure
+  verify:
+    out >= 0
+    out <= price
+}
+
+fn apply_discount(price Int, pct Int) -> Int
+  pure
+{
+  ret price * (100 - pct) / 100
+}

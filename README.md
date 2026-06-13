@@ -53,4 +53,6 @@ the workflow. Project hero page + quick guide: open `site/index.html`. Explainer
 - **Tier-3 propose/validate** — `propose_contract` (provisional until verified) + the
   `sigil from-pytest` draft bridge.
 
+Benchmarks (token reduction, verify-cache latency, effect accuracy, lift throughput): `docs/benchmarks.md`, reproducible via `python3 scripts/benchmark.py`.
+
 See `CHANGELOG.md` for the full v1.0.0 → v2.0.0 history, or open `site/index.html` → Changelog.

@@ -1,5 +1,11 @@
 # Cost model — measured, not estimated
 
+> **v2.0.1 update:** the neutral-IR sheets re-measure at **6.0x** on requests
+> 2.34.2 (was 5.9x in v1). The full multi-metric benchmark — verify-cache
+> latency, effect under-report rate, lift throughput, iteration-turn token
+> budget, IR round-trip stability — lives in `docs/benchmarks.md`, produced by
+> `scripts/benchmark.py`.
+
 ## Methodology
 
 Numbers below are produced by `scripts/measure_costs.py` against this repo's

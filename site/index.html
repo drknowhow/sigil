@@ -172,8 +172,8 @@
   And nothing is called done until <b>verification says so</b>.</p>
   <div class="chips">
     <div class="chip"><em>2</em> languages — Python &amp; R</div>
-    <div class="chip"><em>5.9×</em> measured context reduction (requests 2.34.2)</div>
-    <div class="chip"><em>&lt;50ms</em> verify cache hit</div>
+    <div class="chip"><em>6.0×</em> measured context reduction (requests 2.34.2)</div>
+    <div class="chip"><em>~0.15ms</em> cached verify (78× vs cold)</div>
     <div class="chip"><em>185</em> tests · 0 effect under-reports</div>
   </div>
   <div class="cta">
@@ -233,8 +233,8 @@
             </div>
           </div>
           <div class="vt" data-at="200" style="margin-top:26px;display:flex;gap:18px;align-items:baseline">
-            <span class="vstat"><span data-count data-from="52464" data-to="8907" data-start="205" data-cdur="70"></span> tok</span>
-            <span class="vdim">measured on requests 2.34.2 — <span style="color:var(--txt)">5.9× smaller</span>, hashes instead of bodies</span>
+            <span class="vstat"><span data-count data-from="52464" data-to="8812" data-start="205" data-cdur="70"></span> tok</span>
+            <span class="vdim">measured on requests 2.34.2 — <span style="color:var(--txt)">6.0× smaller</span>, hashes instead of bodies</span>
           </div>
         </div>
 
@@ -305,11 +305,11 @@
           <div class="vt vbig" data-at="10" style="margin:8px 0 26px">v2.0.1 — every number is from the actual build</div>
           <div class="vrow">
             <div class="vcard vt" data-at="22"><div class="vstat"><span data-count data-from="0" data-to="185" data-start="26" data-cdur="40"></span></div><div class="vdim" style="font-size:15px">tests green · 92% core coverage</div></div>
-            <div class="vcard vt" data-at="36"><div class="vstat"><span data-count data-from="0" data-to="5.9" data-start="40" data-cdur="40" data-dec="1"></span>×</div><div class="vdim" style="font-size:15px">measured context reduction</div></div>
-            <div class="vcard vt" data-at="50"><div class="vstat"><span data-count data-from="9" data-to="0" data-start="54" data-cdur="30"></span></div><div class="vdim" style="font-size:15px">effect under-reports / 33 fixtures</div></div>
-            <div class="vcard vt" data-at="64"><div class="vstat">&lt;50ms</div><div class="vdim" style="font-size:15px">verify cache hit, unchanged code</div></div>
+            <div class="vcard vt" data-at="36"><div class="vstat"><span data-count data-from="0" data-to="6.0" data-start="40" data-cdur="40" data-dec="1"></span>×</div><div class="vdim" style="font-size:15px">measured context reduction</div></div>
+            <div class="vcard vt" data-at="50"><div class="vstat"><span data-count data-from="9" data-to="0" data-start="54" data-cdur="30"></span></div><div class="vdim" style="font-size:15px">effect under-reports / 35 fixtures</div></div>
+            <div class="vcard vt" data-at="64"><div class="vstat">~0.15ms</div><div class="vdim" style="font-size:15px">cached verify hit (78× vs cold)</div></div>
           </div>
-          <div class="vt vdim" data-at="130" style="margin-top:26px">Honest where it matters: the spec guessed 10×+ — measurement said <span style="color:var(--txt)">5.9× at first contact</span>; the bigger wins compound per-iteration.</div>
+          <div class="vt vdim" data-at="130" style="margin-top:26px">Honest where it matters: the spec guessed 10×+ — measurement said <span style="color:var(--txt)">6.0× at first contact</span>; the bigger wins compound per-iteration.</div>
         </div>
 
         <div class="vscene" data-dur="270">
@@ -430,28 +430,34 @@ patch <span class="h">#6e01</span> { body.stmts.0.value.right.val := <span class
 </section>
 
 <section id="results">
-  <h2>Measured results</h2>
-  <p class="lede">Real BPE tokenizer, real artifacts, reproducible via
-  <code>scripts/measure_costs.py</code>. Where measurement contradicted the spec's estimates,
-  the measured number won (docs/cost-model.md).</p>
+  <h2>Measured results — benchmarked on v2.0.1</h2>
+  <p class="lede">Real production BPE tokenizer, real artifacts, reproducible via
+  <code>scripts/benchmark.py</code> (full report in <code>docs/benchmarks.md</code>). Where
+  measurement contradicted the spec's estimates, the measured number won.</p>
   <div class="card" style="padding:10px 6px 4px">
   <table>
     <tr><th>source</th><th>full source</th><th>digest sheet</th><th>reduction</th></tr>
     <tr><td>demo_module.py (4 fns)</td><td class="num">319 tok</td><td class="num">133 tok</td><td class="num pos">2.4×</td></tr>
-    <tr><td>lift-legacy webapp.py (15 fns)</td><td class="num">767 tok</td><td class="num">307 tok</td><td class="num pos">2.5×</td></tr>
-    <tr><td>requests 2.34.2 — 6,385 lines, 302 definitions</td><td class="num">52,464 tok</td><td class="num">8,907 tok</td><td class="num pos">5.9×</td></tr>
+    <tr><td>lift-legacy webapp.py (15 fns)</td><td class="num">768 tok</td><td class="num">306 tok</td><td class="num pos">2.5×</td></tr>
+    <tr><td>requests 2.34.2 — 6,385 lines, 302 definitions</td><td class="num">52,464 tok</td><td class="num">8,812 tok</td><td class="num pos">6.0×</td></tr>
   </table>
   </div>
-  <p class="note"><b>Honest note:</b> the spec guessed "10×+ at first contact" — measurement says 5.9× on a real repo.
-  The bigger win is per <i>iteration</i>: the sheet is cache-eligible (R1), edits expand ~11–150 tokens
-  and patches cost ~18 tokens of output, versus re-reading 52k fresh tokens.</p>
+  <p class="note"><b>Honest note:</b> the spec guessed "10×+ at first contact" — measurement says 6.0× on a real repo
+  (the neutral IR is marginally tighter than v1). The bigger win is per <i>iteration</i>: that 8.8k-token sheet is
+  cache-eligible (R1), an edit expands ~19 tokens and a patch costs ~29 output tokens — versus re-reading 52k fresh tokens.</p>
   <div class="grid g3" style="margin-top:26px">
-    <div class="card"><h3>Effect inference</h3><p><b class="pos" style="font-size:26px">0</b><br>under-reports across 33 hand-labeled fixtures
-      (2.6% over-report). Hand-audited 30-function sample of <code>requests</code>: within the &lt;10% gate; both discovered misses became fixtures and were fixed.</p></div>
-    <div class="card"><h3>Verification</h3><p><b class="pos" style="font-size:26px">&lt;50 ms</b><br>cache hit on unchanged code (gate-tested).
-      Infinite-loop contracts killed by timeout; crashing code subprocess-isolated; failing contracts never bind.</p></div>
-    <div class="card"><h3>Build quality</h3><p><b class="pos" style="font-size:26px">185</b><br>tests green · 92% coverage on core/lift/transpile ·
-      ruff clean · property tests for hashing, round-trips, patch≡re-lift, R1 · CI on 3.11/3.12.</p></div>
+    <div class="card"><h3>Verify cache</h3><p><b class="pos" style="font-size:26px">~0.15 ms</b><br>median cached hit on unchanged code —
+      <b>78×</b> faster than a ~12 ms cold run. Content-addressed: a file read + parse. Timeouts/errors never cached.</p></div>
+    <div class="card"><h3>Effect inference</h3><p><b class="pos" style="font-size:26px">0</b><br>under-reports across 39 labeled
+      functions (35 fixtures), 2.4% over-report. The security-critical metric — a missed effect is a bug, an extra one is noise.</p></div>
+    <div class="card"><h3>Lift throughput</h3><p><b class="pos" style="font-size:26px">~3,800</b><br>definitions/sec
+      (~79k lines/s) — all of <code>requests</code> lifts in under 0.1 s. Parse + hash only; no code runs.</p></div>
+    <div class="card"><h3>Iteration turn</h3><p><b class="pos" style="font-size:26px">29 tok</b><br>to emit a verified
+      patch — sheet 19 (cached) + expand 19 + patch 29 out, vs 60 to re-read even a tiny module. Output scales with the change.</p></div>
+    <div class="card"><h3>IR round-trip</h3><p><b class="pos" style="font-size:26px">100%</b><br>of the 19 requests modules are
+      hash-stable through lower → render → re-lower — the property that lets patches and <code>expand</code> ride on the neutral IR.</p></div>
+    <div class="card"><h3>Build quality</h3><p><b class="pos" style="font-size:26px">185</b><br>tests green · 92% coverage on
+      core/lift/transpile · ruff clean · property-tested hashing, round-trips, patch≡re-lift, R1 · CI on Linux 3.11–3.13 + Windows.</p></div>
   </div>
 </section>
 
@@ -640,7 +646,7 @@ patch(<span class="h">#6e01</span>, [{"path": "body.stmts.0.value.right.val", "o
       <tr><td>build: "module budget exceeded"</td><td>a fn exceeds the module-wide <code>fx:</code> (or <code>__sigil_fx__</code>) budget — the message names the call chain</td></tr>
     </table></div>
     <p class="note" style="margin-top:18px">Deeper dives: <code>docs/quickstart.md</code> · <code>docs/language-guide.md</code> ·
-    <code>docs/harness-guide.md</code> · <code>docs/lifting-guide.md</code> · <code>docs/cost-model.md</code> · <code>docs/limitations.md</code></p>
+    <code>docs/harness-guide.md</code> · <code>docs/lifting-guide.md</code> · <code>docs/cost-model.md</code> · <code>docs/benchmarks.md</code> · <code>docs/limitations.md</code></p>
   </section>
 </div><!-- /view-guide -->
 
