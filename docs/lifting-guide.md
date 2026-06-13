@@ -25,3 +25,18 @@ rather than resolved. The roadmap answer is dynamic tracing, not optimism.
 
 **Idempotence.** Re-lifting unchanged code yields identical hashes; changed
 definitions appear as `#old -> #new` lines. Lifting never executes your code.
+
+## Lifting R (v2.0)
+
+`sigil lift script.R` reads top-level `name <- function(...)` definitions. Tier 1 is
+**token-canonical**, not AST-based: the source is normalized to a token sequence, so
+comments and whitespace never move a hash, but a real R parser (with non-standard
+evaluation, promises, lazy args) is explicitly out of scope for v2.0 — see decisions
+D-037. Tier-2 effects are token-rule based and deliberately noisy: `library()`,
+`source()`, `do.call()`, and `eval()` earn `!unsafe?`, while `read.csv`/`write.csv`/
+`download.file`/`set.seed` map to `!fs.read`/`!fs.write`/`!net`/`!rand`.
+
+The reproducibility wedge is `sigil check-r script.R --fn analyze --args "[42]" --expect
+'#hash'`: it runs the function through Rscript with a deparse-stable result hash, so
+`analyze(seed=42) ≡ #abcd1234` becomes a checkable contract. Lifting needs no R runtime;
+`check-r` needs `Rscript` on PATH.

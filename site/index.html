@@ -131,6 +131,26 @@
   .vprog .fill{height:100%;width:0;border-radius:4px;background:linear-gradient(90deg,var(--cyan),var(--violet))}
   .vtime{font-family:var(--mono);font-size:12px;color:var(--dim);min-width:86px;text-align:right}
   #vmp4{display:none;width:100%}
+  /* changelog */
+  #view-change{padding-top:110px;min-height:100vh}
+  .clog{position:relative;margin-left:18px;padding-left:34px;border-left:2px solid var(--line)}
+  .rel{position:relative;margin-bottom:46px}
+  .rel::before{content:'';position:absolute;left:-43px;top:6px;width:16px;height:16px;border-radius:50%;
+    background:var(--bg);border:3px solid var(--cyan)}
+  .rel.minor::before{border-color:var(--violet)}
+  .rel .ver{font-family:var(--mono);font-size:26px;font-weight:800;color:var(--txt)}
+  .rel .ver b{color:var(--cyan)}
+  .rel.minor .ver b{color:var(--violet)}
+  .rel .when{font-family:var(--mono);font-size:13px;color:var(--dim);margin-left:10px}
+  .rel .tagline{color:var(--dim);font-size:16px;margin:6px 0 16px}
+  .rel ul{list-style:none;margin:0;padding:0}
+  .rel li{position:relative;padding:7px 0 7px 22px;font-size:15px;color:var(--txt);border-bottom:1px solid rgba(255,255,255,.04)}
+  .rel li::before{content:'›';position:absolute;left:2px;color:var(--cyan);font-weight:700}
+  .rel.minor li::before{color:var(--violet)}
+  .rel li b{color:var(--cyan);font-weight:600}
+  .rel.minor li b{color:var(--violet)}
+  .rel li code{font-family:var(--mono);font-size:13px;color:var(--amber)}
+  .clog-note{color:var(--dim);font-size:13.5px;margin:30px 0 0;padding-left:34px}
 </style>
 </head>
 <body>
@@ -140,6 +160,7 @@
 <nav class="tabs" aria-label="page tabs">
   <button id="tab-home" class="active" onclick="showTab('home')">Overview</button>
   <button id="tab-guide" onclick="showTab('guide')">Quick Guide</button>
+  <button id="tab-change" onclick="showTab('change')">Changelog</button>
 </nav>
 
 <div id="view-home">
@@ -150,10 +171,10 @@
   human&thinsp;↔&thinsp;AI coding. Intent is code. Effects are visible. Edits are patches.
   And nothing is called done until <b>verification says so</b>.</p>
   <div class="chips">
-    <div class="chip"><em>0</em> effect under-reports / 33 labeled fixtures</div>
+    <div class="chip"><em>2</em> languages — Python &amp; R</div>
     <div class="chip"><em>5.9×</em> measured context reduction (requests 2.34.2)</div>
     <div class="chip"><em>&lt;50ms</em> verify cache hit</div>
-    <div class="chip"><em>18 tok</em> to fix a bug via patch</div>
+    <div class="chip"><em>178</em> tests · 0 effect under-reports</div>
   </div>
   <div class="cta">
     <a class="btn primary" href="#watch">▶ Watch how it works (75s)</a>
@@ -313,6 +334,39 @@
 </section>
 
 <section>
+  <h2>New in v2 — from tool to substrate</h2>
+  <p class="lede">v1 made Python code verifiable. v2 makes the model language-neutral and the
+  contracts richer. Every line below ships in v2.0.0 — see the <a href="#" onclick="showTab('change');return false;">Changelog</a>.</p>
+  <div class="grid g3">
+    <div class="card"><h3><span class="ic">⌘</span>Language-neutral IR + R</h3>
+      <p>Lifted code now hashes to a neutral IR, not Python AST tuples — so a second frontend
+      could land without touching the store. The first one did: <code>sigil lift script.R</code>,
+      plus <code>sigil check-r</code> reproducibility contracts (<code>analyze(seed=42) ≡ #hash</code>),
+      the scientific wedge pytest can't reach.</p></div>
+    <div class="card"><h3><span class="ic">⟲</span>Multi-fn invariants</h3>
+      <p><code>invariant round_trip { over: enc, dec  verify: dec(enc(x)) == x }</code> — a property
+      across two functions. Patch <em>either</em> one and the invariant re-verifies automatically.
+      One broken edit can't slip through.</p></div>
+    <div class="card"><h3><span class="ic">!</span>Effect modes &amp; module budgets</h3>
+      <p><code>!fs.read</code> vs <code>!fs.write</code>, first-class <code>!db</code>, and a
+      whole-module <code>fx:</code> budget every function must satisfy. "This module reads config,
+      never writes, never hits the network" is now a checkable contract.</p></div>
+    <div class="card"><h3><span class="ic">@</span><code>@sigil.bind</code> — write plain Python</h3>
+      <p>Decorate an ordinary function; Sigil lifts it on import, checks its declared budget
+      statically, and verifies through the same runner. The <code>.sg</code> language stays for
+      advanced cases — it's no longer the price of entry.</p></div>
+    <div class="card"><h3><span class="ic">✓</span>CI gate + always-on watch</h3>
+      <p><code>sigil check --against origin/main</code> fails the build if a bound contract
+      regressed or silently vanished — one line in Actions. <code>sigil watch</code> re-verifies
+      on every save. The seatbelt is always on.</p></div>
+    <div class="card"><h3><span class="ic">∴</span>Tier-3 propose / validate</h3>
+      <p>Your agent <code>propose_contract</code>s verify clauses; they register
+      <em>provisional</em> and can only bind by passing verification — guesses never launder into
+      specs. <code>sigil from-pytest</code> turns parametrize tables into reviewable goal drafts.</p></div>
+  </div>
+</section>
+
+<section>
   <h2>Three guarantees, enforced — not reviewed</h2>
   <p class="lede">Mainstream languages throw away intent; prompts can't be verified. Sigil makes
   the contract the source of truth and the toolchain its enforcer.</p>
@@ -412,12 +466,18 @@ patch <span class="h">#6e01</span> { body.stmts.0.value.right.val := <span class
     <div class="phase"><span class="n">Phase 4</span><span class="d">MCP harness — lift / sheet / expand / patch / verify under R1–R3; scripted agent session</span><span class="check">✓ gate</span></div>
     <div class="phase"><span class="n">Phase 5</span><span class="d">Hardening + release — measured cost model, docs, examples, clean-venv install, v1.0.0 (v1.0.1 after field testing)</span><span class="check">✓ gate</span></div>
   </div>
+  <p class="lede" style="margin-top:34px;margin-bottom:14px">Then a real first user filed a report (a true bug, fixed) and a roadmap. Three more releases shipped — depth, then width — same discipline: failing test first, suite green at every commit.</p>
+  <div>
+    <div class="phase"><span class="n">v1.1.0</span><span class="d">Effect modes + module budgets · <code>@sigil.bind</code> · patch-by-snippet · unbind/diff</span><span class="check">✓ shipped</span></div>
+    <div class="phase"><span class="n">v1.2.0</span><span class="d">Recorded inputs · <code>sigil check</code> CI gate · <code>sigil watch</code> · property generation</span><span class="check">✓ shipped</span></div>
+    <div class="phase"><span class="n">v2.0.0</span><span class="d">Language-neutral IR (+migrate) · R frontend (+check-r) · multi-fn invariants · Tier-3 propose/validate</span><span class="check">✓ shipped</span></div>
+  </div>
 </section>
 
 <footer>
-  <p><b>Honest limits</b> (docs/limitations.md): effect scopes are recorded but not yet enforced; heavily dynamic
-  Python earns <code>!unsafe?</code> rather than answers; lifting is one-directional in v1.0; verify network-blocking
-  is best-effort. The Tier-3 contract proposer was the plan's sanctioned cut.</p>
+  <p><b>Honest limits</b> (docs/limitations.md): effect <em>scopes</em> are recorded but not enforced (modes now are);
+  heavily dynamic Python and R earn <code>!unsafe?</code> rather than answers; R Tier-1 is token-canonical, not a full
+  parser; lifting is one-directional; verify network-blocking is best-effort; JVM/JS frontends are v3.</p>
   <p style="margin-top:14px">Get started: <code>pip install -e ".[dev,harness]"</code> → <code>sigil lift your/code</code> →
   <code>sigil serve --root .</code> · docs/quickstart.md · Sigil v2.0.0, 2026</p>
 </footer>
@@ -457,6 +517,39 @@ sigil verify '#a1b2c3d4' --store . --inputs inputs.json
   </section>
 
   <section>
+    <p class="gh4">2b · New in v2 — modes, R, invariants, CI</p>
+    <div class="step"><span class="sn">2.4</span><div><b>Write plain Python</b> — <code>@sigil.bind</code> lifts on import and checks the budget statically.</div></div>
+    <div class="term copy"><button class="cp">copy</button><pre>import sigil
+
+@sigil.bind(verify=["out == n * 3"], fx="pure", inputs={"n": 4})
+def triple(n):
+    return n * 3
+<span class="c"># importing registers goal+impl; sigil verify (or check) binds on pass</span></pre></div>
+    <div class="step"><span class="sn">2.5</span><div><b>Effect modes &amp; a module budget</b> — read-only is a contract now.</div></div>
+    <div class="term copy"><button class="cp">copy</button><pre>module config_io
+fx: !fs.read          <span class="c">-- every fn may read files, never write, never net</span>
+
+fn load(p Str) -> Map
+  !fs.read
+{ ret parse(open(p).read()) }</pre></div>
+    <div class="step"><span class="sn">2.6</span><div><b>An invariant across two functions</b> — patch either, both re-verify.</div></div>
+    <div class="term copy"><button class="cp">copy</button><pre>invariant round_trip {
+  in: x Int
+  over: enc, dec
+  verify:
+    dec(enc(x)) == x
+}</pre></div>
+    <div class="step"><span class="sn">2.7</span><div><b>Lift R + reproducibility contract</b> (lifting needs no R; <code>check-r</code> needs Rscript).</div></div>
+    <div class="term copy"><button class="cp">copy</button><pre>sigil lift analysis.R           <span class="c"># tokenizer-canonical; library() → !unsafe?</span>
+sigil check-r analysis.R --fn analyze --args "[42]" --expect '#a1b2c3d4'</pre></div>
+    <div class="step"><span class="sn">2.8</span><div><b>CI gate + always-on watch.</b></div></div>
+    <div class="term copy"><button class="cp">copy</button><pre>sigil check --against origin/main   <span class="c"># exit 1 if a bound goal regressed or vanished</span>
+sigil watch .                        <span class="c"># save → re-lift → re-verify, continuously</span></pre></div>
+    <p class="note">Migrating a v1 store? <kbd>sigil migrate</kbd> bumps its format — old objects stay readable, re-lift at leisure.
+    Bridge existing tests with <kbd>sigil from-pytest tests/</kbd> → reviewable goal drafts (never auto-registered).</p>
+  </section>
+
+  <section>
     <p class="gh4">3 · MCP — wire your agent in</p>
     <div class="step"><span class="sn">3.1</span><div><b>Claude Code</b> (one line):</div></div>
     <div class="term copy"><button class="cp">copy</button><pre>claude mcp add sigil -- sigil serve --root /path/to/your/repo</pre></div>
@@ -475,7 +568,10 @@ sigil verify '#a1b2c3d4' --store . --inputs inputs.json
       <tr><td>expand(hash, form?)</td><td>readable source (default) or <code>form="canonical"</code> — the patchable data form; derive patch paths from it (R2)</td></tr>
       <tr><td>load_module(source)</td><td>create goals over pure MCP: registers a Sigil module's goals + fns in the store (v1.0.1)</td></tr>
       <tr><td>patch(hash, ops, inputs?)</td><td>AST edit → new hash, <b>auto-verified</b> before success (R3)</td></tr>
-      <tr><td>verify(goal, inputs?)</td><td>run verify clauses; subprocess + timeout; cached; pass ⇒ binds</td></tr>
+      <tr><td>patch_snippet(hash, snippet, inputs?)</td><td>send the corrected source; Sigil tree-diffs to minimal ops — no path authoring (v1.1)</td></tr>
+      <tr><td>verify(goal, inputs?)</td><td>run verify clauses; subprocess + timeout; cached by (goal, impl, inputs); pass ⇒ binds</td></tr>
+      <tr><td>verify_invariant(hash, inputs?)</td><td>check a multi-fn invariant; patching any fn it covers re-verifies it (v2.0)</td></tr>
+      <tr><td>propose_contract(fn_hash, clauses, inputs?)</td><td>Tier 3: agent proposes verify clauses; binds only by passing (v2.0)</td></tr>
       <tr><td>session_close()</td><td>stats + compacted sheet for the next session</td></tr>
     </table></div>
     <div class="term"><div class="tbar"><div class="dot" style="background:#fb7185"></div><div class="dot" style="background:#fbbf24"></div><div class="dot" style="background:#34d399"></div><span>the loop, as the agent sees it</span></div>
@@ -494,8 +590,12 @@ patch(<span class="h">#6e01</span>, [{"path": "body.stmts.0.value.right.val", "o
     re-<code>expand</code> and re-derive, don't guess twice.</p>
     <div class="term copy"><button class="cp">copy</button><pre><span class="c">-- Sigil-written fn: change a constant</span>
 {"path": "body.stmts.0.value.right.val", "op": "replace", "value": "3"}
-<span class="c">-- lifted Python: host AST sits under body.data; derive paths from expand(hash, form="canonical")</span>
-{"path": "body.data.body.0.value.2", "op": "replace", "value": "30.0"}
+<span class="c">-- lifted code: a neutral IR sits under body.data (v2.0). A def is ["def", name, args, [body]...];</span>
+<span class="c">-- derive paths from expand(hash, form="canonical"), or skip path authoring with patch_snippet</span>
+{"path": "body.data.3.0.1.2", "op": "replace", "value": "30.0"}</pre></div>
+    <p class="mini" style="margin-top:14px">Easiest of all — <b>patch_snippet</b>: send the whole corrected
+    definition and Sigil computes the minimal ops for you (snippet ≡ re-lift, by hash).</p>
+    <div class="term copy"><button class="cp">copy</button><pre>patch_snippet("#6e01", "fn triple(n Int) -> Int\n  pure\n{\n  ret n * 3\n}", {"n": 4})
 <span class="c">-- grow / shrink statement lists</span>
 {"path": "body.stmts.1", "op": "insert", "value": { ...stmt data... }}
 {"path": "body.stmts.1", "op": "delete"}</pre></div>
@@ -532,11 +632,86 @@ patch(<span class="h">#6e01</span>, [{"path": "body.stmts.0.value.right.val", "o
       <tr><td>sigil --version shows 1.27.x</td><td>that's an unrelated PyPI package named "sigil" shadowing this one — <kbd>pip uninstall sigil</kbd>, then install this repo (dist name <code>sigil-lang</code>)</td></tr>
       <tr><td>serve: "mcp not installed"</td><td><kbd>pip install "sigil[harness]"</kbd></td></tr>
       <tr><td>a row says !unsafe?</td><td>not an error — the analyzer refuses to guess about dynamic code; treat as effectful until verified</td></tr>
+      <tr><td>check-r: "Rscript not on PATH"</td><td>install R to run reproducibility checks — <em>lifting</em> .R files needs no R runtime</td></tr>
+      <tr><td>old hashes after upgrade to v2</td><td>lifted digests moved to the neutral IR once — run <kbd>sigil migrate</kbd>; old objects stay readable, re-lift when convenient</td></tr>
+      <tr><td>build: "module budget exceeded"</td><td>a fn exceeds the module-wide <code>fx:</code> (or <code>__sigil_fx__</code>) budget — the message names the call chain</td></tr>
     </table></div>
     <p class="note" style="margin-top:18px">Deeper dives: <code>docs/quickstart.md</code> · <code>docs/language-guide.md</code> ·
     <code>docs/harness-guide.md</code> · <code>docs/lifting-guide.md</code> · <code>docs/cost-model.md</code> · <code>docs/limitations.md</code></p>
   </section>
 </div><!-- /view-guide -->
+
+<div id="view-change" hidden>
+  <h2 class="gtitle" style="margin-bottom:8px">Changelog</h2>
+  <p class="lede">Six releases, every one shipped with the suite green and tagged in git
+  (<code>v1.0.0 → v2.0.0</code>). Newest first.</p>
+  <div class="clog">
+
+    <div class="rel">
+      <div class="ver">v<b>2.0.0</b><span class="when">2026-06-12 · width — Sigil as substrate</span></div>
+      <div class="tagline">From a Python verifier to a language-neutral substrate.</div>
+      <ul>
+        <li><b>Language-neutral IR</b> — lifted code hashes to a tagged neutral IR, not Python-AST tuples; exotic constructs host-wrap honestly instead of crashing. Pre-IR store objects stay readable forever; <code>sigil migrate</code> surveys + bumps format.</li>
+        <li><b>R frontend</b> — <code>sigil lift script.R</code>: tokenizer-canonical Tier-1 hashing + token-rule effects (<code>library()</code>/<code>eval</code> → <code>!unsafe?</code>). <code>sigil check-r</code> result-hash reproducibility contracts.</li>
+        <li><b>Multi-fn invariants</b> — <code>invariant { over: enc, dec  verify: dec(enc(x)) == x }</code>; patching either fn re-verifies automatically; passing binds the invariant to all impl hashes.</li>
+        <li><b>Tier-3 propose/validate</b> — <code>propose_contract</code> MCP tool registers provisional, binds only by passing. <code>sigil from-pytest</code> extracts parametrize tables into reviewable drafts.</li>
+        <li class="dim">JVM/JS frontends deferred to v3, per the proposal's own ordering.</li>
+      </ul>
+    </div>
+
+    <div class="rel minor">
+      <div class="ver">v<b>1.2.0</b><span class="when">2026-06-12 · close the loop</span></div>
+      <div class="tagline">The seatbelt is always on.</div>
+      <ul>
+        <li><b>Recorded inputs</b> — goals carry <code>inputs: "file.json"</code>; the verdict cache key now includes the inputs digest (a real v1.0 flaw: different inputs shared an entry).</li>
+        <li><b>sigil check</b> <code>[--against REF]</code> — rebuilds every .sg, re-verifies every goal; fails CI on a regression <em>or</em> a contract dropped without a tombstone. One line in Actions.</li>
+        <li><b>sigil watch</b> — content-hash polling daemon: save → re-lift → re-verify touched goals.</li>
+        <li><b>Property generation</b> — deterministic typed-contract inputs; counterexamples append to the store permanently.</li>
+      </ul>
+    </div>
+
+    <div class="rel minor">
+      <div class="ver">v<b>1.1.0</b><span class="when">2026-06-12 · depth</span></div>
+      <div class="tagline">Richer contracts; Python as the entry point.</div>
+      <ul>
+        <li><b>Effect modes + module budgets</b> — <code>!fs.read</code> / <code>!fs.write</code>, first-class <code>!db</code>, and whole-module <code>fx:</code> budgets in both .sg and <code>__sigil_fx__</code>.</li>
+        <li><b>@sigil.bind</b> — decorate ordinary Python; lifts on import; declared budget checked statically.</li>
+        <li><b>patch-by-snippet</b> — send the corrected definition; Sigil tree-diffs to minimal ops (≡ re-lift, by hash). Selector DSL rejected as subsumed.</li>
+        <li><b>sigil unbind</b> tombstones (dated, reasoned) + <b>sigil diff</b> store contract-impact view.</li>
+        <li class="dim">Node shapes extended once for the whole roadmap so hashes break a single time (D-034). Goldens regenerated.</li>
+      </ul>
+    </div>
+
+    <div class="rel minor">
+      <div class="ver">v<b>1.0.1</b><span class="when">2026-06-12 · first-use report fixes</span></div>
+      <div class="tagline">A real external user found a real bug.</div>
+      <ul>
+        <li><b>Fixed: served verify deadlock</b> — the verify subprocess inherited the MCP server's stdin (the client's JSON-RPC pipe), hanging every verify under <code>sigil serve</code> and risking a traffic-read leak. Now <code>stdin=DEVNULL</code>; regression-tested through a real stdio client.</li>
+        <li><b>load_module</b> tool — goals are creatable over pure MCP; sessions seed the sheet from the store's registered goals.</li>
+        <li><code>expand(hash, form="canonical")</code> exposes the patch-path schema; <code>patch</code> returns the display hash; <code>__sigil_*</code> scaffolding filtered from sheets.</li>
+        <li>Distribution renamed <code>sigil-lang</code> — the PyPI name "sigil" was taken (and shadowing the test install). Import + CLI stay <code>sigil</code>.</li>
+      </ul>
+    </div>
+
+    <div class="rel minor">
+      <div class="ver">v<b>1.0.0</b><span class="when">2026-06-12 · first production release</span></div>
+      <div class="tagline">All six phase gates green — the build, end to end.</div>
+      <ul>
+        <li><b>Core</b> — canonical AST + CBOR/sha256 content addressing; formatting never moves a hash, semantics always do.</li>
+        <li><b>Lifter (Tiers 1–2)</b> — full-module lifting with origin + call-graph effect inference; zero under-reports on 33 labeled fixtures.</li>
+        <li><b>Language + transpiler</b> — LL(1) projection with lossless round-trip; contracts → env-gated assertions; static effect budgets with call-chain errors.</li>
+        <li><b>Verify runner + store</b> — subprocess-isolated, timeout-guarded, cached by (goal, impl) hash; binding only on pass.</li>
+        <li><b>MCP harness</b> — lift/sheet/expand/patch/verify under R1–R3; measured cost model correcting the spec's own 10×→5.9× claim.</li>
+        <li class="dim">Cut per plan §11: the Tier-3 contract proposer (later shipped in v2.0.0).</li>
+      </ul>
+    </div>
+
+  </div>
+  <p class="clog-note">Full detail with rationale lives in <code>CHANGELOG.md</code> and the running decision log
+  <code>docs/decisions.md</code> (D-001 … D-038). Every release is a git tag; <code>git push origin main --tags</code>
+  publishes them.</p>
+</div><!-- /view-change -->
+
 
 </div>
 
@@ -642,17 +817,20 @@ patch(<span class="h">#6e01</span>, [{"path": "body.stmts.0.value.right.val", "o
 })();
 
 function showTab(name){
-  const home = document.getElementById('view-home');
-  const guide = document.getElementById('view-guide');
-  const isGuide = name === 'guide';
-  home.hidden = isGuide; guide.hidden = !isGuide;
-  document.getElementById('tab-home').classList.toggle('active', !isGuide);
-  document.getElementById('tab-guide').classList.toggle('active', isGuide);
-  history.replaceState(null, '', isGuide ? '#guide' : '#');
+  const views = {home: 'view-home', guide: 'view-guide', change: 'view-change'};
+  if (!(name in views)) name = 'home';
+  for (const [key, id] of Object.entries(views)){
+    document.getElementById(id).hidden = key !== name;
+  }
+  for (const key of Object.keys(views)){
+    document.getElementById('tab-' + key).classList.toggle('active', key === name);
+  }
+  history.replaceState(null, '', name === 'home' ? '#' : '#' + name);
   scrollTo({top: 0});
 }
 addEventListener('DOMContentLoaded', () => {
-  if (location.hash === '#guide') showTab('guide');
+  const h = location.hash.replace('#', '');
+  if (h === 'guide' || h === 'change') showTab(h);
   for (const btn of document.querySelectorAll('.copy .cp')){
     btn.addEventListener('click', () => {
       const text = btn.parentElement.querySelector('pre').innerText;

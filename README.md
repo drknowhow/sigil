@@ -12,6 +12,9 @@ sigil lift path/to/code            # Python -> digest sheet (Tier 1 structure + 
 sigil lift path/to/code --json     # machine-readable
 sigil build module.sg --store .    # Sigil -> Python; static effect check; register goals
 sigil verify '#<goal>' --store . --inputs in.json   # subprocess-isolated, cached verify
+sigil lift analysis.R              # v2: R frontend (Tier-1 hashing + token-rule effects)
+sigil check --against origin/main  # v2: CI gate — fail on regressed/dropped contracts
+sigil watch .                      # v2: re-verify on every save
 python3 examples/new-module/run_demo.py   # end-to-end demo incl. the rejection
 ```
 
@@ -35,3 +38,19 @@ is `sigil-lang` (import and CLI remain `sigil`). See
 `.claude/skills/sigil-agent-workflow` for the drop-in agent skill that teaches
 the workflow. Project hero page + quick guide: open `site/index.html`. Explainer video
 (Remotion): `cd video && npm install && npm run studio` (or `npm run render`).
+
+## What's new in v2.0
+
+- **Language-neutral IR** — lifted code hashes to a neutral IR; `sigil migrate` bumps a
+  v1 store's format while keeping old objects readable.
+- **R frontend** — `sigil lift script.R` (tokenizer-canonical Tier-1 + token-rule effects);
+  `sigil check-r --fn analyze --args "[42]" --expect '#hash'` for reproducibility contracts.
+- **Effect modes & module budgets** — `!fs.read`/`!fs.write`, `!db`, and whole-module `fx:`
+  budgets (`.sg` header or `__sigil_fx__` in Python).
+- **`@sigil.bind`** — write plain Python; Sigil lifts on import and checks the budget statically.
+- **Multi-fn invariants** — `invariant { over: enc, dec  verify: dec(enc(x)) == x }`; patching
+  either fn re-verifies.
+- **Tier-3 propose/validate** — `propose_contract` (provisional until verified) + the
+  `sigil from-pytest` draft bridge.
+
+See `CHANGELOG.md` for the full v1.0.0 → v2.0.0 history, or open `site/index.html` → Changelog.
