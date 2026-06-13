@@ -479,7 +479,7 @@ patch <span class="h">#6e01</span> { body.stmts.0.value.right.val := <span class
   heavily dynamic Python and R earn <code>!unsafe?</code> rather than answers; R Tier-1 is token-canonical, not a full
   parser; lifting is one-directional; verify network-blocking is best-effort; JVM/JS frontends are v3.</p>
   <p style="margin-top:14px">Get started: <code>pip install -e ".[dev,harness]"</code> → <code>sigil lift your/code</code> →
-  <code>sigil serve --root .</code> · docs/quickstart.md · Sigil v2.0.0, 2026</p>
+  <code>sigil serve --root .</code> · docs/quickstart.md · Sigil v2.0.1, 2026</p>
 </footer>
 </div><!-- /view-home -->
 
@@ -492,7 +492,7 @@ patch <span class="h">#6e01</span> { body.stmts.0.value.right.val := <span class
     <p class="gh4">1 · Setup</p>
     <div class="step"><span class="sn">1.1</span><div>Requirements: <b>Python 3.11+</b> and pip. From the <code>sigil-build/</code> repo root:</div></div>
     <div class="term copy"><button class="cp">copy</button><pre>pip install -e ".[dev,harness]"   <span class="c"># core + tests + MCP server</span>
-sigil --version                    <span class="c"># sigil 2.0.0</span></pre></div>
+sigil --version                    <span class="c"># sigil 2.0.1</span></pre></div>
     <p class="note">Core installs are lean: stdlib + <code>cbor2</code>. The <code>[harness]</code> extra adds the
     <code>mcp</code> package for <kbd>sigil serve</kbd>; <code>[dev]</code> adds pytest/hypothesis/ruff.</p>
   </section>
@@ -646,6 +646,16 @@ patch(<span class="h">#6e01</span>, [{"path": "body.stmts.0.value.right.val", "o
   <p class="lede">Six releases, every one shipped with the suite green and tagged in git
   (<code>v1.0.0 → v2.0.0</code>). Newest first.</p>
   <div class="clog">
+
+    <div class="rel">
+      <div class="ver">v<b>2.0.1</b><span class="when">2026-06-13 · second field report fixes</span></div>
+      <div class="tagline">A Windows user's first <code>lift</code> shouldn't crash.</div>
+      <ul>
+        <li><b>Fixed: Windows/encoding</b> — CLI pins stdout/stderr to UTF-8, subprocesses decode UTF-8, the sheet footer is ASCII. cp1252 consoles no longer crash <code>sigil lift</code>.</li>
+        <li><b>Fixed: invariant binding</b> not persisted after a patch — a later <code>verify_invariant</code> now agrees with the patch's verdict (was contradictory).</li>
+        <li><code>from-pytest</code> reads any expected column · <code>migrate --store</code> · rejected proposals labelled on the sheet · Windows + 3.13 CI lanes; goldens pinned to their Python minor.</li>
+      </ul>
+    </div>
 
     <div class="rel">
       <div class="ver">v<b>2.0.0</b><span class="when">2026-06-12 · width — Sigil as substrate</span></div>

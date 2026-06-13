@@ -1,29 +1,29 @@
-; digest sheet — tests/fixtures/oss/requests/__init__.py  (Tier 1+2 mechanical lift)
+; digest sheet - tests/fixtures/oss/requests/__init__.py  (Tier 1+2 mechanical lift)
 #f5f0 check_compatibility(urllib3_version str, chardet_version str | None, charset_normalizer_version str | None) -> None !io
 #ced3 _check_cryptography(cryptography_version str) -> None !io
-; context cost: full source ≈1480 tok · digest sheet ≈47 tok · 31× smaller (chars/4 estimate)
-; '?' marks static guesses — Tier 2 over-approximates, never trusts.
+; context cost: full source ~1480 tok | digest sheet ~47 tok | 31x smaller (chars/4 estimate)
+; '?' marks static guesses - Tier 2 over-approximates, never trusts.
 
-; digest sheet — tests/fixtures/oss/requests/__version__.py  (Tier 1+2 mechanical lift)
-; context cost: full source ≈108 tok · digest sheet ≈1 tok · 108× smaller (chars/4 estimate)
-; '?' marks static guesses — Tier 2 over-approximates, never trusts.
+; digest sheet - tests/fixtures/oss/requests/__version__.py  (Tier 1+2 mechanical lift)
+; context cost: full source ~108 tok | digest sheet ~1 tok | 108x smaller (chars/4 estimate)
+; '?' marks static guesses - Tier 2 over-approximates, never trusts.
 
-; digest sheet — tests/fixtures/oss/requests/_internal_utils.py  (Tier 1+2 mechanical lift)
+; digest sheet - tests/fixtures/oss/requests/_internal_utils.py  (Tier 1+2 mechanical lift)
 #f947 to_native_string(string str | bytes, encoding str) -> str pure?
 #0a9d unicode_is_ascii(u_string str) -> bool pure?
-; context cost: full source ≈385 tok · digest sheet ≈30 tok · 13× smaller (chars/4 estimate)
-; '?' marks static guesses — Tier 2 over-approximates, never trusts.
+; context cost: full source ~385 tok | digest sheet ~30 tok | 13x smaller (chars/4 estimate)
+; '?' marks static guesses - Tier 2 over-approximates, never trusts.
 
-; digest sheet — tests/fixtures/oss/requests/_types.py  (Tier 1+2 mechanical lift)
+; digest sheet - tests/fixtures/oss/requests/_types.py  (Tier 1+2 mechanical lift)
 #5d42 SupportsRead{} rec
 #1ece SupportsRead.read(self, length int) -> _T_co pure?
 #73c1 SupportsItems{} rec
 #471c SupportsItems.items(self) -> Iterable[tuple[_KT_co, _VT_co]] pure?
 #eb78 is_prepared(request PreparedRequest) -> TypeIs[_ValidatedRequest] pure?
-; context cost: full source ≈1459 tok · digest sheet ≈64 tok · 23× smaller (chars/4 estimate)
-; '?' marks static guesses — Tier 2 over-approximates, never trusts.
+; context cost: full source ~1459 tok | digest sheet ~64 tok | 23x smaller (chars/4 estimate)
+; '?' marks static guesses - Tier 2 over-approximates, never trusts.
 
-; digest sheet — tests/fixtures/oss/requests/adapters.py  (Tier 1+2 mechanical lift)
+; digest sheet - tests/fixtures/oss/requests/adapters.py  (Tier 1+2 mechanical lift)
 #fd1e _urllib3_request_context(request PreparedRequest, verify bool | str | None, client_cert tuple[str, str] | str | None, poolmanager PoolManager) -> tuple[dict[str, Any], dict[str, Any]] !fs.read !unsafe?
 #9047 BaseAdapter{} rec
 #afb8 BaseAdapter.__init__(self) -> None pure?
@@ -45,10 +45,10 @@
 #3f36 HTTPAdapter.add_headers(self, request PreparedRequest, **kwargs) -> None pure?
 #1ed6 HTTPAdapter.proxy_headers(self, proxy str) -> dict[str, str] !unsafe?
 #d386 HTTPAdapter.send(self, request PreparedRequest, stream bool, timeout _t.TimeoutType, verify _t.VerifyType, cert _t.CertType, proxies dict[str, str] | None) -> Response !fs.read !unsafe?
-; context cost: full source ≈7016 tok · digest sheet ≈576 tok · 12× smaller (chars/4 estimate)
-; '?' marks static guesses — Tier 2 over-approximates, never trusts.
+; context cost: full source ~7016 tok | digest sheet ~576 tok | 12x smaller (chars/4 estimate)
+; '?' marks static guesses - Tier 2 over-approximates, never trusts.
 
-; digest sheet — tests/fixtures/oss/requests/api.py  (Tier 1+2 mechanical lift)
+; digest sheet - tests/fixtures/oss/requests/api.py  (Tier 1+2 mechanical lift)
 #78f4 request(method str, url _t.UriType, **kwargs) -> Response !unsafe?
 #00ac get(url _t.UriType, params _t.ParamsType, **kwargs) -> Response !unsafe?
 #cac1 options(url _t.UriType, **kwargs) -> Response !unsafe?
@@ -57,10 +57,10 @@
 #c166 put(url _t.UriType, data _t.DataType, **kwargs) -> Response !unsafe?
 #da0f patch(url _t.UriType, data _t.DataType, **kwargs) -> Response !unsafe?
 #ef12 delete(url _t.UriType, **kwargs) -> Response !unsafe?
-; context cost: full source ≈1788 tok · digest sheet ≈144 tok · 12× smaller (chars/4 estimate)
-; '?' marks static guesses — Tier 2 over-approximates, never trusts.
+; context cost: full source ~1788 tok | digest sheet ~144 tok | 12x smaller (chars/4 estimate)
+; '?' marks static guesses - Tier 2 over-approximates, never trusts.
 
-; digest sheet — tests/fixtures/oss/requests/auth.py  (Tier 1+2 mechanical lift)
+; digest sheet - tests/fixtures/oss/requests/auth.py  (Tier 1+2 mechanical lift)
 #a3f1 _basic_auth_str(username bytes | str, password bytes | str) -> str !io !unsafe?
 #6fb2 AuthBase{} rec
 #e572 AuthBase.__call__(self, r PreparedRequest) -> PreparedRequest pure?
@@ -84,19 +84,19 @@
 #1bbf HTTPDigestAuth.__call__(self, r PreparedRequest) -> PreparedRequest !clock !rand !unsafe?
 #af7c HTTPDigestAuth.__eq__(self, other object) -> bool pure?
 #99f9 HTTPDigestAuth.__ne__(self, other Any) -> bool pure?
-; context cost: full source ≈3058 tok · digest sheet ≈430 tok · 7× smaller (chars/4 estimate)
-; '?' marks static guesses — Tier 2 over-approximates, never trusts.
+; context cost: full source ~3058 tok | digest sheet ~430 tok | 7x smaller (chars/4 estimate)
+; '?' marks static guesses - Tier 2 over-approximates, never trusts.
 
-; digest sheet — tests/fixtures/oss/requests/certs.py  (Tier 1+2 mechanical lift)
-; context cost: full source ≈107 tok · digest sheet ≈1 tok · 107× smaller (chars/4 estimate)
-; '?' marks static guesses — Tier 2 over-approximates, never trusts.
+; digest sheet - tests/fixtures/oss/requests/certs.py  (Tier 1+2 mechanical lift)
+; context cost: full source ~107 tok | digest sheet ~1 tok | 107x smaller (chars/4 estimate)
+; '?' marks static guesses - Tier 2 over-approximates, never trusts.
 
-; digest sheet — tests/fixtures/oss/requests/compat.py  (Tier 1+2 mechanical lift)
+; digest sheet - tests/fixtures/oss/requests/compat.py  (Tier 1+2 mechanical lift)
 #41fa _resolve_char_detection() -> ModuleType | None !unsafe
-; context cost: full source ≈616 tok · digest sheet ≈15 tok · 41× smaller (chars/4 estimate)
-; '?' marks static guesses — Tier 2 over-approximates, never trusts.
+; context cost: full source ~616 tok | digest sheet ~15 tok | 41x smaller (chars/4 estimate)
+; '?' marks static guesses - Tier 2 over-approximates, never trusts.
 
-; digest sheet — tests/fixtures/oss/requests/cookies.py  (Tier 1+2 mechanical lift)
+; digest sheet - tests/fixtures/oss/requests/cookies.py  (Tier 1+2 mechanical lift)
 #08e2 MockRequest{type} rec
 #9fce MockRequest.__init__(self, request PreparedRequest) -> None !unsafe?
 #d755 MockRequest.get_type(self) -> str pure?
@@ -153,10 +153,10 @@
 #612e cookiejar_from_dict(cookie_dict dict[str, str] | None, cookiejar _CookieJarT, overwrite bool) -> _CookieJarT !unsafe?
 #4e1d cookiejar_from_dict(cookie_dict dict[str, str] | None, cookiejar CookieJar | None, overwrite bool) -> CookieJar !unsafe?
 #4960 merge_cookies(cookiejar CookieJar, cookies dict[str, str] | CookieJar | None) -> CookieJar !unsafe?
-; context cost: full source ≈5387 tok · digest sheet ≈1031 tok · 5× smaller (chars/4 estimate)
-; '?' marks static guesses — Tier 2 over-approximates, never trusts.
+; context cost: full source ~5387 tok | digest sheet ~1031 tok | 5x smaller (chars/4 estimate)
+; '?' marks static guesses - Tier 2 over-approximates, never trusts.
 
-; digest sheet — tests/fixtures/oss/requests/exceptions.py  (Tier 1+2 mechanical lift)
+; digest sheet - tests/fixtures/oss/requests/exceptions.py  (Tier 1+2 mechanical lift)
 #203b RequestException{response, request} rec
 #329b RequestException.__init__(self, *args, **kwargs) -> None pure?
 #1347 InvalidJSONError{} rec
@@ -185,23 +185,23 @@
 #fe01 RequestsWarning{} rec
 #e5a3 FileModeWarning{} rec
 #d1a9 RequestsDependencyWarning{} rec
-; context cost: full source ≈1141 tok · digest sheet ≈227 tok · 5× smaller (chars/4 estimate)
-; '?' marks static guesses — Tier 2 over-approximates, never trusts.
+; context cost: full source ~1141 tok | digest sheet ~227 tok | 5x smaller (chars/4 estimate)
+; '?' marks static guesses - Tier 2 over-approximates, never trusts.
 
-; digest sheet — tests/fixtures/oss/requests/help.py  (Tier 1+2 mechanical lift)
+; digest sheet - tests/fixtures/oss/requests/help.py  (Tier 1+2 mechanical lift)
 #9163 _implementation() -> ? !unsafe?
 #8a8e info() -> dict[str, Any] !unsafe?
 #8ce0 main() -> ? !io !unsafe?
-; context cost: full source ≈1052 tok · digest sheet ≈27 tok · 39× smaller (chars/4 estimate)
-; '?' marks static guesses — Tier 2 over-approximates, never trusts.
+; context cost: full source ~1052 tok | digest sheet ~27 tok | 39x smaller (chars/4 estimate)
+; '?' marks static guesses - Tier 2 over-approximates, never trusts.
 
-; digest sheet — tests/fixtures/oss/requests/hooks.py  (Tier 1+2 mechanical lift)
+; digest sheet - tests/fixtures/oss/requests/hooks.py  (Tier 1+2 mechanical lift)
 #ef92 default_hooks() -> dict[str, list[_t.HookType]] pure?
 #bcac dispatch_hook(key str, hooks _t.HooksInputType | None, hook_data Response, **kwargs) -> Response !unsafe?
-; context cost: full source ≈284 tok · digest sheet ≈42 tok · 7× smaller (chars/4 estimate)
-; '?' marks static guesses — Tier 2 over-approximates, never trusts.
+; context cost: full source ~284 tok | digest sheet ~42 tok | 7x smaller (chars/4 estimate)
+; '?' marks static guesses - Tier 2 over-approximates, never trusts.
 
-; digest sheet — tests/fixtures/oss/requests/models.py  (Tier 1+2 mechanical lift)
+; digest sheet - tests/fixtures/oss/requests/models.py  (Tier 1+2 mechanical lift)
 #8eaf RequestEncodingMixin{url} rec
 #edbc RequestEncodingMixin.path_url(self) -> str !unsafe?
 #8f22 RequestEncodingMixin._encode_params(data str) -> str !unsafe?
@@ -258,14 +258,14 @@
 #d89c Response.links(self) -> dict[str, dict[str, str]] !unsafe?
 #9aaa Response.raise_for_status(self) -> None !unsafe?
 #e127 Response.close(self) -> None !unsafe?
-; context cost: full source ≈10445 tok · digest sheet ≈1194 tok · 9× smaller (chars/4 estimate)
-; '?' marks static guesses — Tier 2 over-approximates, never trusts.
+; context cost: full source ~10445 tok | digest sheet ~1194 tok | 9x smaller (chars/4 estimate)
+; '?' marks static guesses - Tier 2 over-approximates, never trusts.
 
-; digest sheet — tests/fixtures/oss/requests/packages.py  (Tier 1+2 mechanical lift)
-; context cost: full source ≈226 tok · digest sheet ≈1 tok · 226× smaller (chars/4 estimate)
-; '?' marks static guesses — Tier 2 over-approximates, never trusts.
+; digest sheet - tests/fixtures/oss/requests/packages.py  (Tier 1+2 mechanical lift)
+; context cost: full source ~226 tok | digest sheet ~1 tok | 226x smaller (chars/4 estimate)
+; '?' marks static guesses - Tier 2 over-approximates, never trusts.
 
-; digest sheet — tests/fixtures/oss/requests/sessions.py  (Tier 1+2 mechanical lift)
+; digest sheet - tests/fixtures/oss/requests/sessions.py  (Tier 1+2 mechanical lift)
 #524c merge_setting(request_setting Any, session_setting Any, dict_class type) -> Any !unsafe?
 #bf69 merge_hooks(request_hooks _t.HooksType, session_hooks _t.HooksType, dict_class type) -> _t.HooksType !unsafe?
 #1161 SessionRedirectMixin{max_redirects, trust_env, cookies} rec
@@ -297,15 +297,15 @@
 #d024 Session.__getstate__(self) -> dict[str, Any] pure?
 #be1b Session.__setstate__(self, state dict[str, Any]) -> None !mut
 #d6a5 session() -> Session pure?
-; context cost: full source ≈8562 tok · digest sheet ≈827 tok · 10× smaller (chars/4 estimate)
-; '?' marks static guesses — Tier 2 over-approximates, never trusts.
+; context cost: full source ~8562 tok | digest sheet ~827 tok | 10x smaller (chars/4 estimate)
+; '?' marks static guesses - Tier 2 over-approximates, never trusts.
 
-; digest sheet — tests/fixtures/oss/requests/status_codes.py  (Tier 1+2 mechanical lift)
+; digest sheet - tests/fixtures/oss/requests/status_codes.py  (Tier 1+2 mechanical lift)
 #2182 _init() -> ? !mut !unsafe?
-; context cost: full source ≈1086 tok · digest sheet ≈8 tok · 136× smaller (chars/4 estimate)
-; '?' marks static guesses — Tier 2 over-approximates, never trusts.
+; context cost: full source ~1086 tok | digest sheet ~8 tok | 136x smaller (chars/4 estimate)
+; '?' marks static guesses - Tier 2 over-approximates, never trusts.
 
-; digest sheet — tests/fixtures/oss/requests/structures.py  (Tier 1+2 mechanical lift)
+; digest sheet - tests/fixtures/oss/requests/structures.py  (Tier 1+2 mechanical lift)
 #fc9b CaseInsensitiveDict{_store} rec
 #81ac CaseInsensitiveDict.__init__(self, data Mapping[str, _VT] | Iterable[tuple[str, _VT]] | None, **kwargs) -> None pure?
 #9af2 CaseInsensitiveDict.__setitem__(self, key str, value _VT) -> None pure?
@@ -325,10 +325,10 @@
 #152e LookupDict.get(self, key str, default None) -> _VT | None pure?
 #a257 LookupDict.get(self, key str, default _D | _VT) -> _D | _VT pure?
 #99f4 LookupDict.get(self, key str, default _D | None) -> _VT | _D | None pure?
-; context cost: full source ≈1033 tok · digest sheet ≈309 tok · 3× smaller (chars/4 estimate)
-; '?' marks static guesses — Tier 2 over-approximates, never trusts.
+; context cost: full source ~1033 tok | digest sheet ~309 tok | 3x smaller (chars/4 estimate)
+; '?' marks static guesses - Tier 2 over-approximates, never trusts.
 
-; digest sheet — tests/fixtures/oss/requests/utils.py  (Tier 1+2 mechanical lift)
+; digest sheet - tests/fixtures/oss/requests/utils.py  (Tier 1+2 mechanical lift)
 #21f5 dict_to_sequence(d _t.SupportsItems[Any, Any] | Iterable[tuple[Any, Any]]) -> Iterable[tuple[Any, Any]] pure?
 #59b0 super_len(o Any) -> int !env !io
 #eab9 get_netrc_auth(url _t.UriType, raise_errors bool) -> tuple[str, str] | None !env !fs.read !unsafe?
@@ -373,5 +373,5 @@
 #b496 _validate_header_part(header tuple[str | bytes, str | bytes], header_part str | bytes, header_validator_index int) -> None !unsafe?
 #3e39 urldefragauth(url str) -> str !unsafe?
 #24ff rewind_body(prepared_request PreparedRequest) -> None !unsafe?
-; context cost: full source ≈9080 tok · digest sheet ≈857 tok · 11× smaller (chars/4 estimate)
-; '?' marks static guesses — Tier 2 over-approximates, never trusts.
+; context cost: full source ~9080 tok | digest sheet ~857 tok | 11x smaller (chars/4 estimate)
+; '?' marks static guesses - Tier 2 over-approximates, never trusts.

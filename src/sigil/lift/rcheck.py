@@ -29,6 +29,8 @@ def result_hash(script: str | Path, fn: str, args: list, timeout: float = 30.0) 
         ["Rscript", "-e", harness],
         capture_output=True,
         text=True,
+        encoding="utf-8",
+        errors="replace",
         timeout=timeout,
         stdin=subprocess.DEVNULL,
     )

@@ -1,6 +1,6 @@
 """pytest bridge (v2.0, P2.6 narrow): parametrize tables -> REVIEWABLE goal
 drafts. Tier-3 trust applies: output is a proposal for a human/agent to
-review and verify — never auto-registered as a spec."""
+review and verify - never auto-registered as a spec."""
 
 from __future__ import annotations
 
@@ -20,7 +20,7 @@ def extract_drafts(test_source: str, name: str = "<tests>") -> list[dict]:
     for fn in [n for n in tree.body if isinstance(n, ast.FunctionDef)]:
         if not fn.name.startswith("test_"):
             continue
-        # @pytest.mark.parametrize(("a", "b", "expected"), [(...), ...])
+        # @pytest.mark.parametrize("a,b,expected" | ("a","b","expected"), [...])
         rows, names = None, None
         for dec in fn.decorator_list:
             if (
@@ -37,10 +37,13 @@ def extract_drafts(test_source: str, name: str = "<tests>") -> list[dict]:
                 table = _literal(dec.args[1])
                 if names and isinstance(table, list):
                     rows = [r if isinstance(r, (tuple, list)) else (r,) for r in table]
-        if not rows or not names or "expected" not in names:
+        if not rows or not names:
             continue
-        # body: assert f(args...) == expected
+        # body: assert f(args...) == <expected-name>; derive the expected
+        # column from the comparison RHS, not a hard-coded "expected" name
+        # (V2_REPORT minor: a "n,exp" table extracted 0 drafts before).
         target = None
+        expected_col = None
         for stmt in ast.walk(fn):
             if (
                 isinstance(stmt, ast.Assert)
@@ -51,13 +54,20 @@ def extract_drafts(test_source: str, name: str = "<tests>") -> list[dict]:
                 and isinstance(stmt.test.ops[0], ast.Eq)
             ):
                 call = stmt.test.left
-                if all(isinstance(a, ast.Name) for a in call.args):
+                rhs = stmt.test.comparators[0]
+                if (
+                    all(isinstance(a, ast.Name) for a in call.args)
+                    and isinstance(rhs, ast.Name)
+                    and rhs.id in names
+                ):
                     target = (call.func.id, [a.id for a in call.args])
-        if target is None:
+                    expected_col = rhs.id
+        if target is None or expected_col is None:
             continue
         fname, params = target
         cases = [dict(zip(names, row, strict=False)) for row in rows]
         first = cases[0]
+        exp_val = first[expected_col]
         sg = (
             f"module {fname}_proposed\n\n"
             f"goal {fname} {{\n"
@@ -65,7 +75,7 @@ def extract_drafts(test_source: str, name: str = "<tests>") -> list[dict]:
             f"  in: {', '.join(params)}\n"
             f'  inputs: "{fname}.inputs.json"\n'
             f"  verify:\n"
-            f"    out == {first['expected']}\n"
+            f"    out == {exp_val}\n"
             f"}}\n"
         )
         drafts.append(

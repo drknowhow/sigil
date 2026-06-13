@@ -220,3 +220,24 @@ wedge — `analyze(seed=42) ≡ #hash` — runs through Rscript with deparse-sta
 connected agent is the proposer; the harness enforces the trust tier mechanically:
 proposals register provisional, bind only by passing verification. The pytest bridge
 emits reviewable drafts (never auto-registered) — parametrize tables only, by design.
+
+**D-039** (2026-06-13) — **UTF-8 pinned end to end (V2_REPORT Bug 2).** The CLI entrypoint
+reconfigures stdout/stderr to UTF-8; every capture_output subprocess decodes UTF-8 with
+errors="replace"; machine-facing sheet output is ASCII (`~`/`|`/`x` instead of `≈·×—`).
+A Windows cp1252 console crashed `sigil lift` on its own footer otherwise. Gate test runs
+the CLI under a forced cp1252 child.
+
+**D-040** (2026-06-13) — **Invariant bindings persist after a patch (V2_REPORT Bug 1).**
+`_reverify_invariants` was verifying an in-memory patched module but never re-registering
+it, so a later `verify_invariant` ran against stale pre-patch state and contradicted the
+patch's own verdict. Now, on pass, it re-registers + binds the invariant against the
+patched module — mirroring the goal path. The "passing binds the invariant to all impl
+hashes" contract now actually holds.
+
+**D-041** (2026-06-13) — **Version-sensitive goldens are pinned to their generating Python
+minor (operationalizes D-002).** `tests/golden/*.sheet.pyver` records the minor; the golden
+tests assert byte-exact only on that minor and structure-only (entry count + names) off it.
+This lets the new Windows + 3.13 CI lanes run without reddening on expected AST hash-drift,
+while still catching real regressions on the pinned lane. from-pytest now derives the
+expected column from the assert RHS (not a hard-coded name); `sigil migrate` takes `--store`
+or positional; rejected Tier-3 proposals get a distinct sheet status line.

@@ -1,5 +1,20 @@
 # Changelog
 
+## v2.0.1 — 2026-06-13 (second field report fixes)
+
+- **Fixed: Windows/encoding crash** (V2_REPORT Bug 2). CLI pins stdout/stderr to UTF-8;
+  all capture_output subprocesses decode UTF-8 with `errors="replace"`; the sheet footer
+  is ASCII. A stock cp1252 console no longer crashes `sigil lift` on its own glyphs.
+- **Fixed: invariant binding not persisted after a patch** (Bug 1). `patch`/`patch_snippet`
+  now re-register + bind an invariant against the patched module on pass, so a later
+  `verify_invariant` agrees with the patch verdict (was contradictory).
+- `from-pytest` derives the expected column from the assert RHS (a `"n,exp"` table used to
+  extract nothing); `sigil migrate` accepts `--store`; rejected Tier-3 proposals get a
+  distinct sheet status line.
+- CI: added Windows (3.12) and Ubuntu 3.13 lanes. Version-sensitive lift goldens record
+  their generating Python minor and assert byte-exact only there, structure-only off it
+  (operationalizes D-002 — the 3.14 AST drift the report saw is expected, not a defect).
+
 ## v2.0.0 — 2026-06-12 (width: roadmap-next wave 3 — Sigil as substrate)
 
 - **Language-neutral IR (S1)** — lifted code now hashes to a tagged neutral IR

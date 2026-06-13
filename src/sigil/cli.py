@@ -236,8 +236,9 @@ def cmd_migrate(args: argparse.Namespace) -> int:
     from sigil.core.ir import is_ir
     from sigil.store.repo import Store
 
+    store_dir = args.store_flag or args.store_pos or "."
     try:
-        store = Store.open(Path(args.store))
+        store = Store.open(Path(store_dir))
     except ValueError as exc:
         print(f"sigil migrate: {exc}", file=sys.stderr)
         return 2
@@ -478,7 +479,13 @@ def main(argv: list[str] | None = None) -> int:
     p_checkr.add_argument("--timeout", type=float, default=30.0)
 
     p_migrate = sub.add_parser("migrate", help="store v1 -> v2 (IR); legacy stays readable")
-    p_migrate.add_argument("store", nargs="?", default=".")
+    p_migrate.add_argument("store_pos", nargs="?", default=None, metavar="store")
+    p_migrate.add_argument(
+        "--store",
+        dest="store_flag",
+        default=None,
+        help="store directory (same as the positional arg)",
+    )
 
     p_bridge = sub.add_parser("from-pytest", help="parametrize tables -> reviewable goal drafts")
     p_bridge.add_argument("path", help="tests directory")
@@ -551,6 +558,13 @@ def main(argv: list[str] | None = None) -> int:
 
 def entry() -> int:
     """Console-script entry: every failure states cause + remedy, never a traceback."""
+    # Machine-facing output is UTF-8 regardless of the console's locale codec
+    # (Windows cp1252 otherwise crashes on sheet glyphs — firstuse V2_REPORT B2).
+    import contextlib
+
+    for _stream in (sys.stdout, sys.stderr):
+        with contextlib.suppress(AttributeError, ValueError):
+            _stream.reconfigure(encoding="utf-8")  # type: ignore[union-attr]
     try:
         return main()
     except KeyboardInterrupt:

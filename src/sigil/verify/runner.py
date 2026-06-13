@@ -181,6 +181,8 @@ def _execute(
             [sys.executable, "-c", script],
             capture_output=True,
             text=True,
+            encoding="utf-8",
+            errors="replace",
             timeout=timeout,
             # stdin must NOT be inherited: under the stdio MCP transport the
             # server's stdin IS the client's JSON-RPC pipe — an inherited
@@ -244,6 +246,8 @@ def run_verify_many(
             [sys.executable, "-c", script],
             capture_output=True,
             text=True,
+            encoding="utf-8",
+            errors="replace",
             timeout=timeout,
             stdin=subprocess.DEVNULL,
         )
@@ -292,6 +296,8 @@ def run_verify_invariant(
             [sys.executable, "-c", script],
             capture_output=True,
             text=True,
+            encoding="utf-8",
+            errors="replace",
             timeout=timeout,
             stdin=subprocess.DEVNULL,
         )

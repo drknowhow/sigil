@@ -267,11 +267,31 @@ class Harness:
         for d in module.defs:
             if isinstance(d, Invariant) and fn_name in d.over:
                 try:
-                    results.append(
-                        run_verify_invariant(self.store, module, d.name, inputs, timeout=timeout)
+                    verdict = run_verify_invariant(
+                        self.store, module, d.name, inputs, timeout=timeout
                     )
                 except ValueError as exc:
                     results.append({"name": d.name, "status": "error", "detail": str(exc)})
+                    continue
+                results.append(verdict)
+                # Bug 1 (V2_REPORT): on pass, re-register the invariant against
+                # the PATCHED module — otherwise a later verify_invariant runs
+                # against stale pre-patch state and contradicts this verdict.
+                if verdict.get("status") == "pass":
+                    inv_hash = next(
+                        (
+                            gh
+                            for gh, e in self.store.goals().items()
+                            if e["name"] == d.name and e.get("kind") == "invariant"
+                        ),
+                        None,
+                    )
+                    if inv_hash is not None:
+                        new_mod_hash = self.store.put(module)
+                        self.store.register_goal(
+                            inv_hash, new_mod_hash, d.name, extra={"kind": "invariant"}
+                        )
+                        self.store.bind(inv_hash, verdict.get("invariant_hash", inv_hash))
         return {"invariants": results} if results else {}
 
     def verify_invariant(self, ref: str, inputs: dict | None = None, timeout: float = 10.0) -> dict:
@@ -336,6 +356,8 @@ class Harness:
         py_src = ir_source(fn.body.data)
         verdict = run_verify_py(self.store, py_src, fn.name, goal, inputs)
         result["verify"] = verdict.to_dict()
+        outcome = "verified" if verdict.status == "pass" else "rejected (stays provisional)"
+        self.sheet_log.append(f"{self._disp(goal_hash)} goal {fn.name} tier-3 {outcome}")
         return result
 
     # ---- verify ------------------------------------------------------------------------

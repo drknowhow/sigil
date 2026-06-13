@@ -2,16 +2,27 @@ name: ci
 on: [push, pull_request]
 jobs:
   test:
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
     strategy:
+      fail-fast: false
       matrix:
+        os: [ubuntu-latest]
         python-version: ["3.11", "3.12"]
+        include:
+          # field-tested envs (firstuse V2_REPORT): Windows + newer Python.
+          # Goldens are pinned to their generating interpreter (D-002), so the
+          # version-sensitive lift goldens self-skip off 3.11/3.12 — these lanes
+          # still exercise encoding, the harness, R, and every feature test.
+          - os: windows-latest
+            python-version: "3.12"
+          - os: ubuntu-latest
+            python-version: "3.13"
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
-      - run: pip install -e ".[dev]" pytest-cov
+      - run: pip install -e ".[dev,harness]" pytest-cov
       - run: ruff check src tests && ruff format --check src tests
       - run: pytest -q --cov=sigil.core --cov=sigil.lift --cov=sigil.transpile --cov-fail-under=85
       - run: pytest tests/properties -q

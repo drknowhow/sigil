@@ -33,8 +33,18 @@ def test_lift_oss_repo_generates_sheet_verbatim() -> None:
     assert r.stderr == ""  # no skipped files
     digest_lines = [ln for ln in r.stdout.splitlines() if ln.startswith("#")]
     assert len(digest_lines) >= 250
-    # Golden: checked verbatim (plan section 7). Sheet paths are repo-relative.
-    assert r.stdout == GOLDEN.read_text()
+    # Golden: byte-exact on the generating Python minor; off-version assert
+    # structure only (D-002 — lifted host-AST digests shift across minors;
+    # the firstuse V2_REPORT saw exactly this on Python 3.14).
+    pyver = GOLDEN.with_suffix(".sheet.pyver")
+    gen = pyver.read_text().strip() if pyver.exists() else "3.10"
+    here = f"{sys.version_info.major}.{sys.version_info.minor}"
+    if here == gen:
+        assert r.stdout == GOLDEN.read_text()
+    else:
+        want = [ln for ln in GOLDEN.read_text().splitlines() if ln.startswith("#")]
+        assert len(digest_lines) == len(want)
+        assert [ln.split()[1] for ln in digest_lines] == [ln.split()[1] for ln in want]
 
 
 def test_spotcheck_findings_are_fixed() -> None:

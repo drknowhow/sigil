@@ -221,15 +221,15 @@ def render_sheet(
     result: LiftResult, source_path: str = "<module>", namer: DigestNamer | None = None
 ) -> str:
     namer = namer or DigestNamer()
-    lines = [f"; digest sheet — {source_path}  (Tier 1+2 mechanical lift)"]
+    lines = [f"; digest sheet - {source_path}  (Tier 1+2 mechanical lift)"]
     body = [f"{namer.display(e.digest)} {e.name}{e.sig} {e.effects}" for e in result.entries]
     lines += body
     full = result.stats.get("source_tokens_est", 0)
     sheet = est_tokens("\n".join(body)) if body else 1
     if full:
         lines.append(
-            f"; context cost: full source ≈{full} tok · digest sheet ≈{sheet} tok "
-            f"· {full / sheet:.0f}× smaller (chars/4 estimate)"
+            f"; context cost: full source ~{full} tok | digest sheet ~{sheet} tok "
+            f"| {full / sheet:.0f}x smaller (chars/4 estimate)"
         )
-    lines.append("; '?' marks static guesses — Tier 2 over-approximates, never trusts.")
+    lines.append("; '?' marks static guesses - Tier 2 over-approximates, never trusts.")
     return "\n".join(lines) + "\n"
