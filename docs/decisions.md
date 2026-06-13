@@ -170,3 +170,12 @@ under-reporting. Patch results carry both full and display hashes (N6).
 **D-032** (2026-06-12) — **Distribution renamed to `sigil-lang`** (firstuse N4): the
 PyPI name "sigil" belongs to an unrelated project (their v1.27.0 shadowed our install
 during external testing). Import package and console script remain `sigil`.
+
+**D-033** (2026-06-12) — **Post-1.0 roadmap triaged from the first user's
+UPGRADE_PROPOSALS.md** (firstuse/). Accepted with modifications: effect modes +
+module budgets, @sigil.bind lifter-frontend decorator, patch-by-snippet (selector
+DSL rejected as subsumed), unbind tombstones, sheet diff (v1.1); recorded inputs →
+sigil check CI gate → watch → property generation (v1.2); language-neutral IR + R
+frontend gated behind Python depth, IR flagged as a one-way door requiring a store
+migration tool (v2). Full argument: firstuse/PROPOSALS_RESPONSE.md;
+plan: docs/roadmap-next.md. Nothing here changes v1.0.1 behavior.

@@ -1,5 +1,16 @@
 # STATUS
 
+## Session 2026-06-12 (roadmap triage)
+
+- **UPGRADE_PROPOSALS.md received** from the first user (firstuse/) — strategic
+  proposals incl. effect-typed module contracts, @sigil.bind, sigil check, and a
+  multi-language pivot. Reviewed with pushback (their invitation):
+  firstuse/PROPOSALS_RESPONSE.md; triaged plan: docs/roadmap-next.md (D-033).
+- Headline acceptances for v1.1: effect modes + module budgets, @sigil.bind,
+  patch-by-snippet, unbind tombstones. Key pushbacks: selector DSL rejected,
+  sigil check needs recorded-inputs prerequisite, R effect inference is harder
+  than proposed, IR migration is a one-way door (all hashes change).
+
 ## Session 2026-06-12 (published)
 
 - **Repository:** https://github.com/drknowhow/sigil (private; verified anonymous
