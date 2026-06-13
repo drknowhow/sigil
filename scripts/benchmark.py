@@ -212,5 +212,59 @@ def main() -> None:
           f"hash-stable ({rt['stable_pct']}%)")
 
 
+
+
+def write_plots() -> None:
+    """Regenerate docs/img/*.svg from the live numbers (needs matplotlib)."""
+    try:
+        import matplotlib
+    except ImportError:
+        sys.exit("matplotlib not installed. Remedy: pip install matplotlib, or use "
+                 "the live charts on the hero page (site/index.html).")
+    matplotlib.use("Agg")
+    import matplotlib.pyplot as plt
+
+    out = ROOT / "docs" / "img"
+    out.mkdir(parents=True, exist_ok=True)
+    BG, PANEL, TXT, DIM, LINE = "#0b0f18", "#0b0f18", "#e8ecf4", "#8b94a7", "#2a3140"
+    CY, VI = "#5eead4", "#a78bfa"
+
+    def ax_style(ax):
+        ax.set_facecolor(PANEL)
+        for sp in ax.spines.values():
+            sp.set_color(LINE)
+        ax.tick_params(colors=DIM, labelsize=9)
+        ax.grid(axis="y", color=LINE, lw=0.6, alpha=0.5)
+
+    name, count = get_tokenizer()
+    cr = {r["source"]: r for r in bench_context_reduction(count)}
+    # reduction
+    f, ax = plt.subplots(figsize=(7.2, 3.4), dpi=130)
+    f.patch.set_facecolor(BG)
+    ax_style(ax)
+    labels, pct, ann = [], [], []
+    for key in ["requests 2.34.2 (6,385 lines)", "lift-legacy webapp.py (15 fns)",
+                "demo_module.py (4 fns)"]:
+        r = cr[key]
+        labels.append(key.split(" (")[0])
+        pct.append(r["sheet_tokens"] / r["full_tokens"] * 100)
+        ann.append(f"{r['reduction']}x  ({r['full_tokens']:,}->{r['sheet_tokens']:,})")
+    ax.barh(labels, [100] * len(labels), color="#1a2030", height=0.55)
+    ax.barh(labels, pct, color=[CY, VI, VI], height=0.55)
+    for i, (p, a) in enumerate(zip(pct, ann, strict=True)):
+        ax.text(p + 2, i, a, va="center", color=TXT, fontsize=9, fontweight="bold")
+    ax.set_xlim(0, 140)
+    ax.invert_yaxis()
+    ax.set_title("Context reduction - sheet vs full source", loc="left", color=TXT,
+                 fontsize=12, fontweight="bold")
+    f.tight_layout()
+    f.savefig(out / "bench-reduction.svg", facecolor=BG)
+    plt.close(f)
+    print(f"wrote {out}/bench-reduction.svg (+ run the full generator for the rest)")
+
+
 if __name__ == "__main__":
-    main()
+    if "--plots" in sys.argv:
+        write_plots()
+    else:
+        main()

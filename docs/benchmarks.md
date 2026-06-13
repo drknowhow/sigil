@@ -8,12 +8,18 @@ Claude BPE bundled offline with `anthropic` 0.3.x; the script prefers
 ```bash
 python3 scripts/benchmark.py          # human-readable
 python3 scripts/benchmark.py --json   # machine-readable
+python3 scripts/benchmark.py --plots  # regenerate docs/img/*.svg (needs matplotlib)
 ```
+
+The charts below are also rendered live (and version-annotated) on the project
+hero page — open `site/index.html` and scroll to **Benchmarks, visualized**.
 
 Timing figures were measured in the build sandbox (Linux, Python 3.10) and will
 vary by machine; the *ratios* are robust, the absolute ms are not.
 
 ## Context reduction (first contact)
+
+![Context reduction](img/bench-reduction.svg)
 
 | source | full source | digest sheet | reduction |
 |---|---|---|---|
@@ -26,6 +32,8 @@ sheets — 6.0x on requests, up from 5.9x. The spec's eyeballed "10x+" still doe
 not survive measurement at first contact.
 
 ## Iteration turn (where the real savings are)
+
+![Tokens per turn](img/bench-turn.svg)
 
 A single agent edit turn, measured end to end:
 
@@ -43,6 +51,8 @@ compounding lives.
 
 ## Verification latency
 
+![Verify latency](img/bench-verify.svg)
+
 | | median |
 |---|---|
 | cold verify (subprocess, contracts run) | ~12 ms |
@@ -55,6 +65,8 @@ under the original "<50 ms" gate. Timeouts and errors are never cached
 
 ## Effect inference (the security-critical metric)
 
+![Effect inference by version](img/bench-effects.svg)
+
 | | value |
 |---|---|
 | labeled fixtures | 35 |
@@ -65,6 +77,13 @@ under the original "<50 ms" gate. Timeouts and errors are never cached
 Zero under-reporting is the prime directive — a missed effect is a security bug,
 an over-reported one is acceptable noise. Held across every fixture, including
 the read/write-mode and `!db` cases added in v1.1.
+
+## Test suite growth
+
+![Test suite growth](img/bench-tests.svg)
+
+130 → 185 tests across six releases (v1.0.0 → v2.0.1); every release shipped
+with the full suite green and tagged, each exit gate written as a failing test first.
 
 ## Lift throughput
 

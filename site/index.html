@@ -151,6 +151,17 @@
   .rel.minor li b{color:var(--violet)}
   .rel li code{font-family:var(--mono);font-size:13px;color:var(--amber)}
   .clog-note{color:var(--dim);font-size:13.5px;margin:30px 0 0;padding-left:34px}
+  /* benchmark charts */
+  .charts{display:grid;grid-template-columns:repeat(auto-fit,minmax(420px,1fr));gap:20px}
+  .chartcard{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:24px 26px}
+  .chartcard h3{font-size:18px;margin:0 0 4px;color:var(--txt)}
+  .chartcard .what{font-size:13.5px;color:var(--dim);margin:0 0 16px;line-height:1.5}
+  .chartbox{width:100%}
+  .chartbox svg{width:100%;height:auto;display:block;font-family:var(--mono)}
+  .chartcap{font-size:13px;color:var(--dim);margin:14px 0 0;line-height:1.55;border-top:1px solid var(--line);padding-top:12px}
+  .chartcap b{color:var(--cyan)}
+  .chartcap .up{color:var(--cyan);font-family:var(--mono)}
+  .chartcap .new{color:var(--violet);font-family:var(--mono)}
 </style>
 </head>
 <body>
@@ -461,6 +472,71 @@ patch <span class="h">#6e01</span> { body.stmts.0.value.right.val := <span class
   </div>
 </section>
 
+<section id="charts">
+  <h2>Benchmarks, visualized</h2>
+  <p class="lede">The same v2.0.1 numbers as plots, each with what it measures and how it moved
+  across versions. Reproduce any of them with <code>python3 scripts/benchmark.py</code>.</p>
+  <div class="charts">
+
+    <div class="chartcard">
+      <h3>Context reduction — sheet vs full source</h3>
+      <p class="what">How much smaller the digest sheet an agent reads is than the raw file. Bar = the
+      sheet as a fraction of the full source; shorter is better.</p>
+      <div class="chartbox" id="chart-reduction"></div>
+      <p class="chartcap"><b>What it means:</b> the agent references hashes, not bodies — a 10k-line repo
+      becomes a one-page sheet. <span class="up">v1 5.9× → v2.0.1 6.0×</span> on requests (the neutral IR
+      sheets are marginally tighter).</p>
+    </div>
+
+    <div class="chartcard">
+      <h3>Tokens an agent spends per edit turn</h3>
+      <p class="what">The actual cost of one fix: read the sheet, expand only the target, emit a patch —
+      versus re-reading the whole module. Output (the expensive side) scales with the change.</p>
+      <div class="chartbox" id="chart-turn"></div>
+      <p class="chartcap"><b>What it means:</b> R1 keeps the sheet cache-eligible, R2 expands on demand, R3
+      emits a patch not a file. At repo scale that's an <b>8.8k cached-token sheet vs 52k fresh per turn</b>
+      — where the &gt;10× compounding lives.</p>
+    </div>
+
+    <div class="chartcard">
+      <h3>Verify latency — cold vs cached</h3>
+      <p class="what">A goal's contracts run subprocess-isolated once (cold); an unchanged re-verify is a
+      content-addressed cache hit. Log scale — the cached bar is genuinely that small.</p>
+      <div class="chartbox" id="chart-verify"></div>
+      <p class="chartcap"><b>What it means:</b> re-checking unchanged code is effectively free, so the loop
+      stays fast. <span class="up">v1 gate was &lt;50 ms → v2.0.1 measures ~0.15 ms</span> (78× vs cold).</p>
+    </div>
+
+    <div class="chartcard">
+      <h3>Effect inference accuracy, by version</h3>
+      <p class="what">The security metric. A <em>missed</em> effect is a bug; an over-reported one is
+      acceptable noise. Bars = hand-labeled fixtures; the line that matters is flat at zero.</p>
+      <div class="chartbox" id="chart-effects"></div>
+      <p class="chartcap"><b>What it means:</b> <b>0 under-reports, every version</b>, even as fixtures grew
+      30→35 (read/write modes + <code>!db</code> added in v1.1). Over-report <span class="up">2.6% → 2.4%</span>.</p>
+    </div>
+
+    <div class="chartcard">
+      <h3>Test suite growth, every release green</h3>
+      <p class="what">Each release shipped with the full suite passing and tagged. Each exit gate was
+      written as a failing test before the feature it gates.</p>
+      <div class="chartbox" id="chart-tests"></div>
+      <p class="chartcap"><b>What it means:</b> coverage of behavior grew with capability, never traded away.
+      <span class="up">130 → 185 tests</span> across six releases; <span class="new">+ R, invariants, IR round-trip</span> property tests in v2.</p>
+    </div>
+
+    <div class="chartcard">
+      <h3>What v2 added on top of v1</h3>
+      <p class="what">v1 was a Python verifier; v2 made the model language-neutral and the contracts
+      richer. New capabilities, measured where measurable.</p>
+      <div class="chartbox" id="chart-v2"></div>
+      <p class="chartcap"><b>What it means:</b> a second language (R) lands without touching the store; lifted
+      modules round-trip the neutral IR at <b>100%</b>; lift runs at <b>~3,800 defs/s</b>. <span class="new">All new in v2.</span></p>
+    </div>
+
+  </div>
+</section>
+
 <section>
   <h2>Six phases, six gates, all green</h2>
   <p class="lede">Every phase exit gate was written as a failing test before its implementation.</p>
@@ -736,6 +812,88 @@ patch(<span class="h">#6e01</span>, [{"path": "body.stmts.0.value.right.val", "o
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script>
+/* ---- benchmark charts: hand-rendered SVG, no dependency ---- */
+(function(){
+  const C = {cyan:'#5eead4', violet:'#a78bfa', amber:'#fbbf24', red:'#fb7185',
+             dim:'#8b94a7', txt:'#e8ecf4', line:'rgba(255,255,255,0.10)', track:'rgba(255,255,255,0.06)'};
+  const esc = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;');
+  function hbars(rows, opts){
+    opts = opts || {};
+    const W = 600, padL = 168, padR = 96, rowH = 46, top = 8;
+    const H = top*2 + rows.length*rowH;
+    const max = opts.max || Math.max(...rows.map(r => r.value));
+    let svg = `<svg viewBox="0 0 ${W} ${H}" role="img">`;
+    rows.forEach((r, i) => {
+      const y = top + i*rowH;
+      const frac = r.frac != null ? r.frac : (opts.log
+        ? Math.log10(r.value*1000 + 1) / Math.log10(max*1000 + 1)
+        : r.value / max);
+      const bw = Math.max(3, frac * (W - padL - padR));
+      svg += `<text x="0" y="${y+22}" fill="${C.dim}" font-size="13">${esc(r.label)}</text>`;
+      svg += `<rect x="${padL}" y="${y+9}" width="${W-padL-padR}" height="20" rx="5" fill="${C.track}"/>`;
+      svg += `<rect x="${padL}" y="${y+9}" width="${bw}" height="20" rx="5" fill="${r.color||C.cyan}"/>`;
+      svg += `<text x="${padL+bw+8}" y="${y+24}" fill="${C.txt}" font-size="13" font-weight="700">${esc(r.disp)}</text>`;
+    });
+    return svg + `</svg>`;
+  }
+  function vtrend(pts, opts){
+    opts = opts || {};
+    const W = 600, H = 230, padB = 40, padT = 28, padX = 26;
+    const max = opts.max || Math.max(...pts.map(p => p.value)) * 1.15;
+    const n = pts.length, span = (W - padX*2) / n;
+    const bw = span * 0.42, color = opts.color || C.cyan;
+    const x = i => padX + span*i + span/2;
+    const y = v => padT + (1 - v/max) * (H - padT - padB);
+    let svg = `<svg viewBox="0 0 ${W} ${H}" role="img">`;
+    svg += `<line x1="${padX}" y1="${H-padB}" x2="${W-padX}" y2="${H-padB}" stroke="${C.line}"/>`;
+    const poly = pts.map((p,i)=>`${x(i)},${y(p.value)}`).join(' ');
+    svg += `<polyline points="${poly}" fill="none" stroke="${color}" stroke-width="2" opacity="0.55"/>`;
+    pts.forEach((p,i)=>{
+      const by = y(p.value), bx = x(i)-bw/2;
+      svg += `<rect x="${bx}" y="${by}" width="${bw}" height="${H-padB-by}" rx="4" fill="${color}" opacity="0.85"/>`;
+      svg += `<circle cx="${x(i)}" cy="${by}" r="3.5" fill="${color}"/>`;
+      svg += `<text x="${x(i)}" y="${by-9}" fill="${C.txt}" font-size="13" font-weight="700" text-anchor="middle">${esc(p.disp)}</text>`;
+      svg += `<text x="${x(i)}" y="${H-padB+20}" fill="${C.dim}" font-size="11.5" text-anchor="middle">${esc(p.label)}</text>`;
+    });
+    return svg + `</svg>`;
+  }
+  const set = (id, html) => { const el = document.getElementById(id); if (el) el.innerHTML = html; };
+  set('chart-reduction', hbars([
+    {label:'requests 2.34.2', frac:8812/52464, color:C.cyan,   disp:'6.0× · 52,464→8,812'},
+    {label:'webapp.py (15 fns)', frac:306/768,  color:C.violet, disp:'2.5× · 768→306'},
+    {label:'demo_module.py',     frac:133/319,  color:C.violet, disp:'2.4× · 319→133'},
+  ]));
+  set('chart-turn', hbars([
+    {label:'re-read module', value:60, color:C.red,    disp:'60 tok'},
+    {label:'digest sheet (cached)', value:19, color:C.cyan, disp:'19 tok'},
+    {label:'expand 1 fn', value:19, color:C.cyan,   disp:'19 tok'},
+    {label:'patch (output)', value:29, color:C.amber, disp:'29 tok'},
+  ], {max:60}));
+  set('chart-verify', hbars([
+    {label:'cold (subprocess)', value:12,   color:C.amber, disp:'~12 ms'},
+    {label:'cached (store hit)', value:0.15, color:C.cyan,  disp:'~0.15 ms · 78× faster'},
+  ], {max:12, log:true}));
+  set('chart-effects', vtrend([
+    {label:'v1.0', value:30, disp:'30'},
+    {label:'v1.1', value:33, disp:'33'},
+    {label:'v1.2', value:33, disp:'33'},
+    {label:'v2.0', value:35, disp:'35'},
+    {label:'v2.0.1', value:35, disp:'35'},
+  ], {color:C.violet, max:42}));
+  set('chart-tests', vtrend([
+    {label:'v1.0.0', value:130, disp:'130'},
+    {label:'v1.0.1', value:136, disp:'136'},
+    {label:'v1.1.0', value:157, disp:'157'},
+    {label:'v1.2.0', value:166, disp:'166'},
+    {label:'v2.0.0', value:178, disp:'178'},
+    {label:'v2.0.1', value:185, disp:'185'},
+  ], {color:C.cyan, max:210}));
+  set('chart-v2', hbars([
+    {label:'IR round-trip', frac:1.0,  color:C.cyan,   disp:'100% stable (19/19)'},
+    {label:'lift throughput', frac:0.78, color:C.violet, disp:'~3,800 defs/s'},
+    {label:'languages', frac:1.0, color:C.amber, disp:'Python + R'},
+  ]));
+})();
 /* ---- explainer player (mirrors video/src timings, 30fps timeline) ---- */
 (function(){
   const stage = document.getElementById('vstage');
