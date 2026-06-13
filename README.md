@@ -55,6 +55,4 @@ the workflow. Project hero page + quick guide: open `site/index.html`. Explainer
   validates proposals against *generated* inputs, not the proposer's own witness) + the
   `sigil from-pytest` draft bridge.
 
-Benchmarks (token reduction, verify-cache latency, effect accuracy, lift throughput): `docs/benchmarks.md` (v2.0.2; includes Tier-3 proposal-validation), reproducible via `python3 scripts/benchmark.py`.
-
-See `CHANGELOG.md` for the full v1.0.0 → v2.0.0 history, or open `site/index.html` → Changelog.
+Benchmarks (token reduction, verify-cache latency, effect accuracy, lift throughput): `docs/benchmarks.md` (v2.0.2; includes Tier-3 proposal-validation), reproducible via `python3 scrip

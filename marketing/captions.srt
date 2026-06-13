@@ -1,0 +1,39 @@
+1
+00:00:00,000 --> 00:00:02,400
+Your AI just wrote 400 lines.
+
+2
+00:00:02,400 --> 00:00:05,000
+Do you trust them?
+
+3
+00:00:05,000 --> 00:00:10,000
+It snuck in a network call you never asked for.
+
+4
+00:00:10,000 --> 00:00:13,000
+Sigil checks effects before the build.
+
+5
+00:00:13,000 --> 00:00:15,000
+REJECTED.
+
+6
+00:00:15,000 --> 00:00:21,000
+Write the goal. The AI fills it in. Nothing ships unverified.
+
+7
+00:00:21,000 --> 00:00:23,200
+6.0× less context.
+
+8
+00:00:23,200 --> 00:00:24,600
+0 effects missed.
+
+9
+00:00:24,600 --> 00:00:26,000
+Every patch verified.
+
+10
+00:00:26,000 --> 00:00:30,000
+SIGIL — code an AI can't quietly get wrong.

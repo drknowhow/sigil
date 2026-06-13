@@ -1,0 +1,32 @@
+SIGIL — Higgsfield 30s · fast copy-paste sheet (6 shots × 5s)
+Palette: bg #07090f · cyan #5eead4 · violet #a78bfa · amber #fbbf24 · red #fb7185 · text #e8ecf4
+
+────────────────────────────────────────────────────────
+SHOT 1 · Motion: Slow Push-In (Dolly In) · 5s
+PROMPT: Cinematic dark tech scene, a dense wall of glowing monospace code scrolling fast on a near-black navy screen, cyan and violet syntax highlights, subtle film grain and bloom, shallow depth of field, code blurring at the edges, ominous calm, premium developer-tool aesthetic.
+CAPTION: "Your AI just wrote 400 lines."  →  "Do you trust them?"
+
+────────────────────────────────────────────────────────
+SHOT 2 · Motion: Whip Pan into the line · 5s
+PROMPT: A single line of code lights up red-amber inside scrolling code, a glowing tendril of light branches off toward a network/cloud icon, warning glow pulsing, the rest of the code dims to navy, tense cinematic high contrast, drifting particles.
+CAPTION: "It snuck in a network call you never asked for."   tag: requests.get(...) → !net
+
+────────────────────────────────────────────────────────
+SHOT 3 · Motion: Crash Zoom (out) · 5s
+PROMPT: A luminous cyan geometric forcefield snaps into existence across the screen, blocking the red tendril mid-reach, the offending line freezes, a sharp 'REJECTED' seal stamps in red over a clean monospace call-chain readout, decisive satisfying snap of light.
+CAPTION: "Sigil checks effects before the build."  →  stamp: REJECTED
+
+────────────────────────────────────────────────────────
+SHOT 4 · Motion: Orbit / Arc · 6s
+PROMPT: Four glowing nodes connected in a loop — sheet, expand, patch, verify — pulsing cyan light traveling around the cycle, a green check igniting on 'verify', clean holographic UI over navy, content-addressed hash strings (#a4c2) floating and locking into place, elegant futuristic trustworthy.
+CAPTION: "Write the goal. The AI fills it in. Nothing ships unverified."  small: sheet → expand → patch → verify ✓
+
+────────────────────────────────────────────────────────
+SHOT 5 · Motion: Build Up (punch-ins) · 5s
+PROMPT: Bold numeric stats slamming onto screen one at a time in cyan and white over a dark grid, a constellation of glowing hash-nodes forming a network behind them, a subtle bar/line chart rising, crisp kinetic typography, premium data-driven look.
+CAPTION: "6.0× less context"  ·  "0 effects missed"  ·  "every patch verified"
+
+────────────────────────────────────────────────────────
+SHOT 6 · Motion: Slow Pull-Out (Dolly Out) · 4s
+PROMPT: The word 'SIGIL' resolves from a swirl of hash-particles into a crisp white-to-cyan-to-violet gradient wordmark, centered on deep navy, a single calm glow pulse, particles settling, confident clean end-card energy.
+CAPTION: SIGIL  →  "Code an AI can't quietly get wrong."  →  "Python · R · MCP"
