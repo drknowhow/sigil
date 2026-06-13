@@ -165,7 +165,7 @@
 
 <div id="view-home">
 <header>
-  <div class="tag">v2.0.0 · python + R · invariants · 178 tests · field-tested over live MCP</div>
+  <div class="tag">v2.0.1 · python + R · invariants · 185 tests · field-tested on Windows &amp; live MCP</div>
   <h1>SIGIL</h1>
   <p class="sub">A <b>contract-first</b>, <b>content-addressed</b> language and toolchain for
   human&thinsp;↔&thinsp;AI coding. Intent is code. Effects are visible. Edits are patches.
@@ -174,7 +174,7 @@
     <div class="chip"><em>2</em> languages — Python &amp; R</div>
     <div class="chip"><em>5.9×</em> measured context reduction (requests 2.34.2)</div>
     <div class="chip"><em>&lt;50ms</em> verify cache hit</div>
-    <div class="chip"><em>178</em> tests · 0 effect under-reports</div>
+    <div class="chip"><em>185</em> tests · 0 effect under-reports</div>
   </div>
   <div class="cta">
     <a class="btn primary" href="#watch">▶ Watch how it works (75s)</a>
@@ -302,9 +302,9 @@
         <div class="vscene" data-dur="300">
           <div class="vglow1"></div>
           <div class="vt vlabel" data-at="2" style="color:var(--violet)">measured, not estimated</div>
-          <div class="vt vbig" data-at="10" style="margin:8px 0 26px">v2.0.0 — every number is from the actual build</div>
+          <div class="vt vbig" data-at="10" style="margin:8px 0 26px">v2.0.1 — every number is from the actual build</div>
           <div class="vrow">
-            <div class="vcard vt" data-at="22"><div class="vstat"><span data-count data-from="0" data-to="178" data-start="26" data-cdur="40"></span></div><div class="vdim" style="font-size:15px">tests green · 92% core coverage</div></div>
+            <div class="vcard vt" data-at="22"><div class="vstat"><span data-count data-from="0" data-to="185" data-start="26" data-cdur="40"></span></div><div class="vdim" style="font-size:15px">tests green · 92% core coverage</div></div>
             <div class="vcard vt" data-at="36"><div class="vstat"><span data-count data-from="0" data-to="5.9" data-start="40" data-cdur="40" data-dec="1"></span>×</div><div class="vdim" style="font-size:15px">measured context reduction</div></div>
             <div class="vcard vt" data-at="50"><div class="vstat"><span data-count data-from="9" data-to="0" data-start="54" data-cdur="30"></span></div><div class="vdim" style="font-size:15px">effect under-reports / 33 fixtures</div></div>
             <div class="vcard vt" data-at="64"><div class="vstat">&lt;50ms</div><div class="vdim" style="font-size:15px">verify cache hit, unchanged code</div></div>
@@ -336,7 +336,7 @@
 <section>
   <h2>New in v2 — from tool to substrate</h2>
   <p class="lede">v1 made Python code verifiable. v2 makes the model language-neutral and the
-  contracts richer. Every line below ships in v2.0.0 — see the <a href="#" onclick="showTab('change');return false;">Changelog</a>.</p>
+  contracts richer. Every line below ships in v2.0.1 — see the <a href="#" onclick="showTab('change');return false;">Changelog</a>.</p>
   <div class="grid g3">
     <div class="card"><h3><span class="ic">⌘</span>Language-neutral IR + R</h3>
       <p>Lifted code now hashes to a neutral IR, not Python AST tuples — so a second frontend
@@ -450,7 +450,7 @@ patch <span class="h">#6e01</span> { body.stmts.0.value.right.val := <span class
       (2.6% over-report). Hand-audited 30-function sample of <code>requests</code>: within the &lt;10% gate; both discovered misses became fixtures and were fixed.</p></div>
     <div class="card"><h3>Verification</h3><p><b class="pos" style="font-size:26px">&lt;50 ms</b><br>cache hit on unchanged code (gate-tested).
       Infinite-loop contracts killed by timeout; crashing code subprocess-isolated; failing contracts never bind.</p></div>
-    <div class="card"><h3>Build quality</h3><p><b class="pos" style="font-size:26px">178</b><br>tests green · 92% coverage on core/lift/transpile ·
+    <div class="card"><h3>Build quality</h3><p><b class="pos" style="font-size:26px">185</b><br>tests green · 92% coverage on core/lift/transpile ·
       ruff clean · property tests for hashing, round-trips, patch≡re-lift, R1 · CI on 3.11/3.12.</p></div>
   </div>
 </section>
@@ -471,13 +471,14 @@ patch <span class="h">#6e01</span> { body.stmts.0.value.right.val := <span class
     <div class="phase"><span class="n">v1.1.0</span><span class="d">Effect modes + module budgets · <code>@sigil.bind</code> · patch-by-snippet · unbind/diff</span><span class="check">✓ shipped</span></div>
     <div class="phase"><span class="n">v1.2.0</span><span class="d">Recorded inputs · <code>sigil check</code> CI gate · <code>sigil watch</code> · property generation</span><span class="check">✓ shipped</span></div>
     <div class="phase"><span class="n">v2.0.0</span><span class="d">Language-neutral IR (+migrate) · R frontend (+check-r) · multi-fn invariants · Tier-3 propose/validate</span><span class="check">✓ shipped</span></div>
+    <div class="phase"><span class="n">v2.0.1</span><span class="d">Second field report — Windows/UTF-8 crash fixed · invariant binding persisted after patch · Windows + 3.13 CI lanes</span><span class="check">✓ shipped</span></div>
   </div>
 </section>
 
 <footer>
   <p><b>Honest limits</b> (docs/limitations.md): effect <em>scopes</em> are recorded but not enforced (modes now are);
   heavily dynamic Python and R earn <code>!unsafe?</code> rather than answers; R Tier-1 is token-canonical, not a full
-  parser; lifting is one-directional; verify network-blocking is best-effort; JVM/JS frontends are v3.</p>
+  parser; lifting is one-directional; verify network-blocking is best-effort; JVM/JS frontends are v3. CI runs on Linux 3.11–3.13 + Windows.</p>
   <p style="margin-top:14px">Get started: <code>pip install -e ".[dev,harness]"</code> → <code>sigil lift your/code</code> →
   <code>sigil serve --root .</code> · docs/quickstart.md · Sigil v2.0.1, 2026</p>
 </footer>
@@ -634,6 +635,8 @@ patch(<span class="h">#6e01</span>, [{"path": "body.stmts.0.value.right.val", "o
       <tr><td>a row says !unsafe?</td><td>not an error — the analyzer refuses to guess about dynamic code; treat as effectful until verified</td></tr>
       <tr><td>check-r: "Rscript not on PATH"</td><td>install R to run reproducibility checks — <em>lifting</em> .R files needs no R runtime</td></tr>
       <tr><td>old hashes after upgrade to v2</td><td>lifted digests moved to the neutral IR once — run <kbd>sigil migrate</kbd>; old objects stay readable, re-lift when convenient</td></tr>
+      <tr><td><code>sigil lift</code> crashes on Windows (charmap/cp1252)</td><td>fixed in v2.0.1 — output is pinned to UTF-8 and the sheet footer is ASCII; upgrade (older: set <kbd>PYTHONUTF8=1</kbd>)</td></tr>
+      <tr><td>verify_invariant disagrees with a patch's verdict</td><td>fixed in v2.0.1 — the invariant binding is now persisted to the patched module on pass</td></tr>
       <tr><td>build: "module budget exceeded"</td><td>a fn exceeds the module-wide <code>fx:</code> (or <code>__sigil_fx__</code>) budget — the message names the call chain</td></tr>
     </table></div>
     <p class="note" style="margin-top:18px">Deeper dives: <code>docs/quickstart.md</code> · <code>docs/language-guide.md</code> ·
@@ -644,7 +647,7 @@ patch(<span class="h">#6e01</span>, [{"path": "body.stmts.0.value.right.val", "o
 <div id="view-change" hidden>
   <h2 class="gtitle" style="margin-bottom:8px">Changelog</h2>
   <p class="lede">Six releases, every one shipped with the suite green and tagged in git
-  (<code>v1.0.0 → v2.0.0</code>). Newest first.</p>
+  (<code>v1.0.0 → v2.0.1</code>). Newest first.</p>
   <div class="clog">
 
     <div class="rel">
@@ -860,7 +863,7 @@ addEventListener('DOMContentLoaded', () => {
   camera.position.set(0, 0, 16);
 
   // --- a content-addressed constellation: nodes (definitions) + edges (call graph)
-  const N = 178;                                   // one node per passing test, naturally
+  const N = 185;                                   // one node per passing test, naturally
   const nodes = [];
   const group = new THREE.Group();
   const geoA = new THREE.IcosahedronGeometry(0.16, 0);
