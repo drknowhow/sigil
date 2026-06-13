@@ -24,7 +24,7 @@
 ; '?' marks static guesses — Tier 2 over-approximates, never trusts.
 
 ; digest sheet — tests/fixtures/oss/requests/adapters.py  (Tier 1+2 mechanical lift)
-#ba89 _urllib3_request_context(request PreparedRequest, verify bool | str | None, client_cert tuple[str, str] | str | None, poolmanager PoolManager) -> tuple[dict[str, Any], dict[str, Any]] !fs !unsafe?
+#ba89 _urllib3_request_context(request PreparedRequest, verify bool | str | None, client_cert tuple[str, str] | str | None, poolmanager PoolManager) -> tuple[dict[str, Any], dict[str, Any]] !fs.read !unsafe?
 #174d BaseAdapter{} rec
 #9fbe BaseAdapter.__init__(self) -> None pure?
 #4a5e BaseAdapter.send(self, request PreparedRequest, stream bool, timeout _t.TimeoutType, verify _t.VerifyType, cert _t.CertType, proxies dict[str, str] | None) -> Response pure?
@@ -35,17 +35,17 @@
 #22d8 HTTPAdapter.__setstate__(self, state dict[str, Any]) -> None !mut !unsafe?
 #51dc HTTPAdapter.init_poolmanager(self, connections int, maxsize int, block bool, **pool_kwargs) -> None !unsafe?
 #9a84 HTTPAdapter.proxy_manager_for(self, proxy str, **proxy_kwargs) -> Any !unsafe?
-#5c82 HTTPAdapter.cert_verify(self, conn Any, url str, verify _t.VerifyType, cert _t.CertType) -> None !fs
+#5c82 HTTPAdapter.cert_verify(self, conn Any, url str, verify _t.VerifyType, cert _t.CertType) -> None !fs.read
 #059e HTTPAdapter.build_response(self, req PreparedRequest, resp Any) -> Response !unsafe?
-#233a HTTPAdapter.build_connection_pool_key_attributes(self, request PreparedRequest, verify _t.VerifyType, cert _t.CertType) -> tuple[dict[str, Any], dict[str, Any]] !fs !unsafe?
-#f149 HTTPAdapter.get_connection_with_tls_context(self, request PreparedRequest, verify _t.VerifyType, proxies dict[str, str] | None, cert _t.CertType) -> HTTPConnectionPool !fs !unsafe?
+#233a HTTPAdapter.build_connection_pool_key_attributes(self, request PreparedRequest, verify _t.VerifyType, cert _t.CertType) -> tuple[dict[str, Any], dict[str, Any]] !fs.read !unsafe?
+#f149 HTTPAdapter.get_connection_with_tls_context(self, request PreparedRequest, verify _t.VerifyType, proxies dict[str, str] | None, cert _t.CertType) -> HTTPConnectionPool !fs.read !unsafe?
 #d26c HTTPAdapter.get_connection(self, url str, proxies dict[str, str] | None) -> HTTPConnectionPool !io !unsafe?
 #1bbd HTTPAdapter.close(self) -> None !unsafe?
 #055a HTTPAdapter.request_url(self, request PreparedRequest, proxies dict[str, str] | None) -> str !unsafe?
 #db1b HTTPAdapter.add_headers(self, request PreparedRequest, **kwargs) -> None pure?
 #c732 HTTPAdapter.proxy_headers(self, proxy str) -> dict[str, str] !unsafe?
-#324d HTTPAdapter.send(self, request PreparedRequest, stream bool, timeout _t.TimeoutType, verify _t.VerifyType, cert _t.CertType, proxies dict[str, str] | None) -> Response !fs !unsafe?
-; context cost: full source ≈7016 tok · digest sheet ≈570 tok · 12× smaller (chars/4 estimate)
+#324d HTTPAdapter.send(self, request PreparedRequest, stream bool, timeout _t.TimeoutType, verify _t.VerifyType, cert _t.CertType, proxies dict[str, str] | None) -> Response !fs.read !unsafe?
+; context cost: full source ≈7016 tok · digest sheet ≈576 tok · 12× smaller (chars/4 estimate)
 ; '?' marks static guesses — Tier 2 over-approximates, never trusts.
 
 ; digest sheet — tests/fixtures/oss/requests/api.py  (Tier 1+2 mechanical lift)
@@ -331,10 +331,10 @@
 ; digest sheet — tests/fixtures/oss/requests/utils.py  (Tier 1+2 mechanical lift)
 #184f39b3 dict_to_sequence(d _t.SupportsItems[Any, Any] | Iterable[tuple[Any, Any]]) -> Iterable[tuple[Any, Any]] pure?
 #ac43da04 super_len(o Any) -> int !env !io
-#daeaf7e5 get_netrc_auth(url _t.UriType, raise_errors bool) -> tuple[str, str] | None !env !fs !unsafe?
+#daeaf7e5 get_netrc_auth(url _t.UriType, raise_errors bool) -> tuple[str, str] | None !env !fs.read !unsafe?
 #71edfa4e guess_filename(obj Any) -> str | None pure?
 #bab91496 extract_zipped_paths(path str) -> str !env !fs
-#b07ecf76 atomic_open(filename str) -> Generator[BufferedWriter, None, None] !env !fs
+#b07ecf76 atomic_open(filename str) -> Generator[BufferedWriter, None, None] !env !fs.write
 #59af66d6 from_key_val_list(value Mapping[Any, Any] | Iterable[tuple[Any, Any]] | None) -> dict[Any, Any] | None !unsafe?
 #94e233a7 to_key_val_list(value None) -> None pure?
 #cb283538 to_key_val_list(value _t.SupportsItems[_KT, _VT] | Iterable[tuple[_KT, _VT]]) -> list[tuple[_KT, _VT]] pure?
@@ -373,5 +373,5 @@
 #6bec2520 _validate_header_part(header tuple[str | bytes, str | bytes], header_part str | bytes, header_validator_index int) -> None !unsafe?
 #b0102a26 urldefragauth(url str) -> str !unsafe?
 #cc4723ff rewind_body(prepared_request PreparedRequest) -> None !unsafe?
-; context cost: full source ≈9080 tok · digest sheet ≈898 tok · 10× smaller (chars/4 estimate)
+; context cost: full source ≈9080 tok · digest sheet ≈901 tok · 10× smaller (chars/4 estimate)
 ; '?' marks static guesses — Tier 2 over-approximates, never trusts.

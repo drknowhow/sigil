@@ -31,6 +31,7 @@ class LiftResult:
     module: Module
     entries: list[SheetEntry] = field(default_factory=list)
     stats: dict = field(default_factory=dict)
+    module_fx: EffectRow | None = None  # from __sigil_fx__ = "!fs.read ..." (v1.1)
 
 
 def _type_expr(node: ast.expr | None) -> TypeExpr | None:
@@ -91,6 +92,7 @@ def lift_source(source: str, name: str = "<module>") -> LiftResult:
         ) from exc
 
     rows = infer_module_effects(tree)
+    module_fx = _module_fx(tree, name)
     pure_unknown = EffectRow(effects=[], uncertain=True)
     imports: list[Import] = []
     defs: list = []
@@ -150,13 +152,69 @@ def lift_source(source: str, name: str = "<module>") -> LiftResult:
                     )
                 )
 
-    module = Module(name=name, imports=imports, defs=defs)
+    module = Module(name=name, imports=imports, defs=defs, fx=module_fx)
     stats = {
         "functions": sum(1 for e in entries if e.kind == "fn"),
         "records": sum(1 for e in entries if e.kind == "record"),
         "source_tokens_est": est_tokens(source),
     }
-    return LiftResult(module=module, entries=entries, stats=stats)
+    return LiftResult(module=module, entries=entries, stats=stats, module_fx=module_fx)
+
+
+def _module_fx(tree: ast.Module, name: str) -> EffectRow | None:
+    """Read a module-level __sigil_fx__ = "..." budget declaration (v1.1)."""
+    for s in tree.body:
+        if (
+            isinstance(s, ast.Assign)
+            and len(s.targets) == 1
+            and isinstance(s.targets[0], ast.Name)
+            and s.targets[0].id == "__sigil_fx__"
+            and isinstance(s.value, ast.Constant)
+            and isinstance(s.value.value, str)
+        ):
+            from sigil.lang.parser import parse_fxrow
+
+            try:
+                return parse_fxrow(s.value.value)
+            except ValueError as exc:
+                raise ValueError(
+                    f"Cannot parse __sigil_fx__ in {name}: {exc}. "
+                    'Remedy: use effect-row syntax, e.g. "!fs.read(./cache) !net".'
+                ) from exc
+    return None
+
+
+def check_module_budget(source: str, name: str = "<module>") -> list[str]:
+    """Violation messages for a Python module's __sigil_fx__ budget (v1.1).
+    Empty list = within budget (or no budget declared)."""
+    from sigil.lift.effects import analyze_module
+    from sigil.transpile.effectcheck import _admits, _budget_set, _disp, _reachable
+
+    tree = ast.parse(source)
+    budget_row = _module_fx(tree, name)
+    if budget_row is None:
+        return []
+    budget = _budget_set(budget_row)
+    facts = analyze_module(tree)
+    errors = []
+    for key in sorted(facts):
+        if key.startswith("__sigil_"):
+            continue
+        for eff, (chain, reason) in sorted(_reachable(facts, key).items()):
+            if not _admits(budget, eff):
+                errors.append(
+                    f"{name}: fn {key!r} exceeds the module __sigil_fx__ budget: "
+                    f"{' -> '.join(chain)}: {reason} requires {_disp(eff)}; budget "
+                    f"allows {render_row_budget(budget_row)}. Remedy: remove the "
+                    "call or widen __sigil_fx__."
+                )
+    return errors
+
+
+def render_row_budget(row: EffectRow) -> str:
+    from sigil.lang.printer import pfx
+
+    return pfx(row)
 
 
 def render_sheet(

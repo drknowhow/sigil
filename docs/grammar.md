@@ -47,7 +47,7 @@ The spec's `⊑` (subsequence) is illustrative, not in the v1.0 core (D-011).
 ## Grammar (EBNF)
 
 ```
-module      = "module" NAME { item } ;
+module      = "module" NAME [ "fx:" fxrow ] { item } ;   (* module-wide budget, v1.1 *)
 item        = use | goal | fn ;
 use         = "use" NAME ;                       (* effect-bearing Python import *)
 
@@ -58,6 +58,7 @@ goalfield   = "intent:" STRING
             | "fx:"     fxrow
             | "law:"    STRING
             | "ack:"    STRING                   (* required if fx contains !unsafe *)
+            | "inputs:" STRING                   (* recorded-inputs file, v1.2 *)
             | "verify:" expr { expr } ;          (* clauses end at next FIELD or "}" *)
 
 fn          = "fn" NAME "(" [ params ] ")" [ "->" type ]
@@ -67,7 +68,8 @@ param       = NAME [ type ] ;
 type        = "[" type "]"
             | NAME [ "[" type { "," type } "]" ] ;
 fxrow       = "pure" | effect { effect } ;
-effect      = "!" NAME [ "(" SCOPE ")" ] [ "?" ] ;
+effect      = "!" NAME [ "." NAME ] [ "(" SCOPE ")" ] [ "?" ] ;
+                                                 (* mode: read | write — v1.1 *)
 contract    = "pre" expr
             | "post" "|" NAME "|" expr ;         (* NAME binds the result *)
 

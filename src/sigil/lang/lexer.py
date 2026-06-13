@@ -30,7 +30,7 @@ KEYWORDS = {
     "or",
     "not",
 }
-FIELDS = {"intent", "in", "out", "fx", "law", "verify", "ack"}
+FIELDS = {"intent", "in", "out", "fx", "law", "verify", "ack", "inputs", "over"}
 TWO_CHAR = [":=", "<-", "->", "==", "!=", "<=", ">=", "//", "**"]
 ONE_CHAR = "{}()[],:|!?.+-*/%<>="
 ESCAPES = {"n": "\n", "t": "\t", '"': '"', "\\": "\\"}
@@ -141,13 +141,22 @@ def tokenize(src: str) -> list[Tok]:
             col += j - i
             i = j
             continue
-        # Effect scope: after '!' NAME '(' everything raw up to ')'.
+        # Effect scope: after '!' NAME [ '.' NAME ] '(' raw up to ')'.
         if (
             c == "("
             and len(toks) >= 2
             and toks[-1].kind == "NAME"
-            and toks[-2].kind == "OP"
-            and toks[-2].val == "!"
+            and (
+                (toks[-2].kind == "OP" and toks[-2].val == "!")
+                or (
+                    len(toks) >= 4
+                    and toks[-2].kind == "OP"
+                    and toks[-2].val == "."
+                    and toks[-3].kind == "NAME"
+                    and toks[-4].kind == "OP"
+                    and toks[-4].val == "!"
+                )
+            )
         ):
             emit("OP", "(")
             depth += 1

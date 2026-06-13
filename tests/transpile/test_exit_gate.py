@@ -55,5 +55,5 @@ def test_cli_build_rejects_over_budget(tmp_path) -> None:
         env=ENV,
     )
     assert r.returncode == 2
-    assert "fetch_prices -> save_cache: open requires !fs" in r.stderr
+    assert "fetch_prices -> save_cache: open requires !fs.write" in r.stderr
     assert "Remedy" in r.stderr

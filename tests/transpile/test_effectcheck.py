@@ -46,7 +46,8 @@ def test_over_budget_effect_rejected_with_chain() -> None:
     msg = str(exc.value)
     # Golden chain line (sigil-transpile-verify skill: message has a golden test).
     assert (
-        "fetch_prices -> save_cache: open requires !fs; budget allows !net(api.example.com)" in msg
+        "fetch_prices -> save_cache: open requires !fs.write; budget allows !net(api.example.com)"
+        in msg
     )
     assert "Remedy" in msg
 

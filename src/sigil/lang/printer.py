@@ -107,6 +107,8 @@ def pfx(row: EffectRow) -> str:
     out = []
     for e in row.effects:
         s = f"!{e.name}"
+        if e.mode:
+            s += f".{e.mode}"
         if e.scope:
             s += f"({e.scope})"
         if e.uncertain:
@@ -186,6 +188,9 @@ def pgoal(g: Goal) -> str:
     if g.ack is not None:
         esc = "".join(_ESC.get(c, c) for c in g.ack)
         lines.append(f'  ack: "{esc}"')
+    if g.inputs_ref is not None:
+        esc = "".join(_ESC.get(c, c) for c in g.inputs_ref)
+        lines.append(f'  inputs: "{esc}"')
     if g.verify:
         lines.append("  verify:")
         for v in g.verify:
@@ -195,7 +200,10 @@ def pgoal(g: Goal) -> str:
 
 
 def print_module(mod: Module) -> str:
-    parts = [f"module {mod.name}"]
+    head = f"module {mod.name}"
+    if mod.fx is not None:
+        head += f"\nfx: {pfx(mod.fx)}"
+    parts = [head]
     for imp in mod.imports:
         parts.append(f"use {imp.module}")
     for d in mod.defs:

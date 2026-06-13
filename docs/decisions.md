@@ -179,3 +179,14 @@ sigil check CI gate → watch → property generation (v1.2); language-neutral I
 frontend gated behind Python depth, IR flagged as a one-way door requiring a store
 migration tool (v2). Full argument: firstuse/PROPOSALS_RESPONSE.md;
 plan: docs/roadmap-next.md. Nothing here changes v1.0.1 behavior.
+
+
+**D-034** (2026-06-12) — **v1.1 node-shape change, batched.** Effect.mode, Module.fx and
+Goal.inputs_ref were added in one release so Sigil-node hashes break once, not three
+times (lifted-code digests unaffected). Mode semantics: an unmoded effect is the
+superset (read+write collapse to it; budgets granting `!fs` admit both; budgets granting
+`!fs.read` reject writes). Inferred unmoded effects require an unmoded grant — the
+analyzer only narrows to a mode on positive evidence (open() literal mode, os.path
+predicate table, Path method names), never by guess. Goldens regenerated (7 rows in
+requests.sheet gained modes). Budget messages are mode-precise; the 1.0 golden message
+test updated accordingly.

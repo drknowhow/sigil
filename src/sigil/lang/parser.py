@@ -65,6 +65,11 @@ class Parser(ExprParserMixin):
         imports: list[Import] = []
         defs: list[Node] = []
         self.skip_nl()
+        module_fx = None
+        if self.at("FIELD", "fx"):
+            self.next()
+            module_fx = self.fxrow()
+            self.skip_nl()
         while not self.at("EOF"):
             if self.at("KW", "use"):
                 self.next()
@@ -88,14 +93,14 @@ class Parser(ExprParserMixin):
                     t.col,
                     "top level items are use/goal/fn",
                 )
-        return Module(name=name, imports=imports, defs=defs)
+        return Module(name=name, imports=imports, defs=defs, fx=module_fx)
 
     def goal(self) -> Goal:
         self.expect("KW", "goal")
         name = self.expect("NAME").val
         self.expect("OP", "{")
         self.skip_nl()
-        intent, output, fx, ack = "", None, None, None
+        intent, output, fx, ack, inputs_ref = "", None, None, None, None
         inputs: list[Param] = []
         laws: list[Law] = []
         verify: list[VerifyClause] = []
@@ -114,6 +119,8 @@ class Parser(ExprParserMixin):
                 laws.append(Law(text=self.expect("STRING").val))
             elif f.val == "ack":
                 ack = self.expect("STRING").val
+            elif f.val == "inputs":
+                inputs_ref = self.expect("STRING").val
             else:  # verify
                 while not self.at("FIELD") and not self.at("OP", "}"):
                     verify.append(VerifyClause(expr=self.expr()))
@@ -129,6 +136,7 @@ class Parser(ExprParserMixin):
             laws=laws,
             verify=verify,
             ack=ack,
+            inputs_ref=inputs_ref,
         )
 
     def fn(self) -> Fn:
@@ -201,6 +209,10 @@ class Parser(ExprParserMixin):
         while self.at("OP", "!"):
             self.next()
             name = self.expect("NAME", what="effect name").val
+            mode = None
+            if self.at("OP", "."):
+                self.next()
+                mode = self.expect("NAME", what="effect mode (read/write)").val
             scope = None
             if self.at("OP", "("):
                 self.next()
@@ -210,7 +222,7 @@ class Parser(ExprParserMixin):
             if self.at("OP", "?"):
                 self.next()
                 uncertain = True
-            effects.append(Effect(name=name, scope=scope, uncertain=uncertain))
+            effects.append(Effect(name=name, scope=scope, uncertain=uncertain, mode=mode))
         return EffectRow(effects=effects, uncertain=False)
 
     # ---- statements -------------------------------------------------------
@@ -274,3 +286,9 @@ class Parser(ExprParserMixin):
 
 def parse_module(src: str) -> Module:
     return Parser(tokenize(src)).module()
+
+
+def parse_fxrow(text: str):
+    """Parse a bare effect row, e.g. '!fs.read(./cache) !net' or 'pure'
+    (used by __sigil_fx__ module budgets and @sigil.bind fx=...)."""
+    return Parser(tokenize(text)).fxrow()

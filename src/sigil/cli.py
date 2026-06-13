@@ -183,6 +183,41 @@ def cmd_verify(args: argparse.Namespace) -> int:
     return 0 if verdict.status == "pass" else 1
 
 
+def cmd_unbind(args: argparse.Namespace) -> int:
+    from sigil.store.repo import Store
+
+    try:
+        store = Store.open(Path(args.store))
+        goal_hash = store.resolve(args.ref)
+        store.unbind(goal_hash, reason=args.reason)
+    except ValueError as exc:
+        print(f"sigil unbind: {exc}", file=sys.stderr)
+        return 2
+    print(store.describe_goal(goal_hash))
+    return 0
+
+
+def cmd_diff(args: argparse.Namespace) -> int:
+    from sigil.store.diff import store_diff
+    from sigil.store.repo import Store
+
+    try:
+        d = store_diff(Store.open(Path(args.base)), Store.open(Path(args.head)))
+    except ValueError as exc:
+        print(f"sigil diff: {exc}", file=sys.stderr)
+        return 2
+    if args.json:
+        print(json.dumps(d, indent=2))
+    else:
+        marks = {"new": "+", "dropped": "-", "bound": "✓", "unbound": "✗", "retired": "†"}
+        for key, items in d.items():
+            for item in items:
+                print(f"{marks[key]} {key}: {item}")
+        if not any(d.values()):
+            print("no contract changes")
+    return 0 if not d["unbound"] and not d["dropped"] else 1
+
+
 def cmd_serve(args: argparse.Namespace) -> int:
     try:
         from sigil.harness.server import create_server
@@ -224,6 +259,16 @@ def main(argv: list[str] | None = None) -> int:
     p_verify.add_argument("--timeout", type=float, default=10.0, help="seconds (default 10)")
     p_verify.add_argument("--json", action="store_true", help="machine-readable output")
 
+    p_unbind = sub.add_parser("unbind", help="retire a contract with a dated, reasoned tombstone")
+    p_unbind.add_argument("ref", help="goal hash")
+    p_unbind.add_argument("--reason", required=True, help="why this contract is retired")
+    p_unbind.add_argument("--store", default=".", help="directory containing .sigil/")
+
+    p_diff = sub.add_parser("diff", help="contract impact between two stores (PR review)")
+    p_diff.add_argument("base", help="base store directory")
+    p_diff.add_argument("head", help="head store directory")
+    p_diff.add_argument("--json", action="store_true")
+
     p_serve = sub.add_parser("serve", help="run the MCP harness (stdio)")
     p_serve.add_argument("--root", default=".", help="directory for the .sigil store (default .)")
 
@@ -240,6 +285,10 @@ def main(argv: list[str] | None = None) -> int:
         return cmd_build(args)
     if args.command == "verify":
         return cmd_verify(args)
+    if args.command == "unbind":
+        return cmd_unbind(args)
+    if args.command == "diff":
+        return cmd_diff(args)
     if args.command == "serve":
         return cmd_serve(args)
     if args.command in _LATER_PHASES:

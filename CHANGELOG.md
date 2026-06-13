@@ -1,5 +1,24 @@
 # Changelog
 
+## v1.1.0 — 2026-06-12 (depth: roadmap-next wave 1)
+
+- **Effect modes + module budgets** (P0.1): `!fs.read(path)` / `!fs.write`,
+  first-class `!db`; `open()` literal-mode detection; read+write collapse to
+  unmoded supersets (never under-report); module-wide `fx:` budgets in .sg and
+  `__sigil_fx__ = "..."` in Python, enforced over every fn's reachable row.
+  Budget errors are mode-precise.
+- **`@sigil.bind`** (P0.2): Python-native lifter frontend — registers goal +
+  impl + module snapshot on import; declared fx checked statically at import;
+  verification stays subprocess-isolated and never runs at import.
+- **Patch-by-snippet** (P1.5): send the corrected definition; Sigil tree-diffs
+  canonical forms into minimal ops (snippet ≡ re-lift, by hash). MCP tool
+  `patch_snippet`; selector DSL rejected per PROPOSALS_RESPONSE.md.
+- **`sigil unbind`** tombstones (dated, reasoned) + **`sigil diff`** store
+  contract-impact view (P3.10, P3.8).
+- Node shapes extended once for the whole roadmap (Effect.mode, Module.fx,
+  Goal.inputs_ref): store object hashes change — re-run `build --store`/re-lift
+  (D-034). Goldens regenerated.
+
 ## v1.0.1 — 2026-06-12 (first-use report fixes)
 
 External first-use report (firstuse/FIRST_USE_REPORT.md) drove this release:

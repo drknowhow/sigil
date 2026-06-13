@@ -111,9 +111,14 @@ class Store:
         return "#" + full[: self.short_len]
 
     # ---- goals + bindings ----------------------------------------------------
-    def register_goal(self, goal_hash: str, module_hash: str | None, name: str) -> None:
+    def register_goal(
+        self, goal_hash: str, module_hash: str | None, name: str, extra: dict | None = None
+    ) -> None:
         index = self._read_index()
-        index["goals"][goal_hash] = {"name": name, "module": module_hash}
+        entry = {"name": name, "module": module_hash}
+        if extra:
+            entry.update(extra)
+        index["goals"][goal_hash] = entry
         self._write_index(index)
 
     def goals(self) -> dict:
@@ -131,12 +136,37 @@ class Store:
     def binding(self, goal_hash: str) -> dict | None:
         return self._read_index()["bindings"].get(goal_hash)
 
+    def unbind(self, goal_hash: str, reason: str) -> None:
+        """Retire a contract deliberately: tombstone with date + reason (v1.1).
+        The ledger stays honest — retirement is ceremony, not deletion."""
+        import time as _t
+
+        index = self._read_index()
+        prior = index["bindings"].pop(goal_hash, None)
+        index.setdefault("tombstones", {})[goal_hash] = {
+            "reason": reason,
+            "retired_at": _t.strftime("%Y-%m-%dT%H:%M:%SZ", _t.gmtime()),
+            "prior_binding": prior,
+        }
+        self._write_index(index)
+
+    def tombstone(self, goal_hash: str) -> dict | None:
+        return self._read_index().get("tombstones", {}).get(goal_hash)
+
     def status(self, goal_hash: str) -> str:
+        if self.tombstone(goal_hash) is not None:
+            return "retired"
         return "verified" if self.binding(goal_hash) else "provisional"
 
     def describe_goal(self, goal_hash: str) -> str:
         """Sheet-line description; 'provisional' must stay visible (skill rule)."""
         name = self._read_index()["goals"].get(goal_hash, {}).get("name", "?")
+        ts = self.tombstone(goal_hash)
+        if ts is not None:
+            return (
+                f"{self.display(goal_hash)} goal {name} retired "
+                f"({ts['retired_at'][:10]}: {ts['reason']})"
+            )
         b = self.binding(goal_hash)
         if b is None:
             return f"{self.display(goal_hash)} goal {name} provisional"

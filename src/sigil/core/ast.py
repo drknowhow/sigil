@@ -42,9 +42,10 @@ class Effect(Node):
     """A single effect, e.g. !net(alpaca.markets). ``uncertain`` is the '?'
     marker: a static guess that must never be silenced (CLAUDE.md hard rule)."""
 
-    name: str  # net | fs | rand | clock | env | io | mut | unsafe
+    name: str  # net | fs | db | rand | clock | env | io | mut | unsafe
     scope: str | None = None
     uncertain: bool = False
+    mode: str | None = None  # 'read' | 'write' (v1.1); None = both/unknown-superset
 
 
 @dataclass(frozen=True)
@@ -105,6 +106,7 @@ class Goal(Node):
     laws: list[Law] = field(default_factory=list)
     verify: list[VerifyClause] = field(default_factory=list)
     ack: str | None = None  # required when fx contains !unsafe
+    inputs_ref: str | None = None  # recorded-inputs file (v1.2, D-020 revisited)
 
 
 @dataclass(frozen=True)
@@ -132,7 +134,8 @@ class Import(Node):
 class Module(Node):
     name: str
     imports: list[Import] = field(default_factory=list)
-    defs: list[Node] = field(default_factory=list)  # Goal | Fn | Record
+    defs: list[Node] = field(default_factory=list)  # Goal | Fn | Record | Invariant
+    fx: EffectRow | None = None  # module-wide budget every fn must satisfy (v1.1)
 
 
 @dataclass(frozen=True)

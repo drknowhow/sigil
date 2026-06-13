@@ -86,6 +86,16 @@ def create_server(root: str = "."):
             return _err(exc)
 
     @mcp.tool()
+    def patch_snippet(hash: str, snippet: str, inputs: dict | None = None) -> dict:
+        """Patch by replacement source (v1.1): send the corrected definition;
+        Sigil tree-diffs the canonical forms and computes the minimal ops —
+        no path authoring. Same auto-verify guarantee as patch (R3)."""
+        try:
+            return h.patch_snippet(hash, snippet, inputs=inputs)
+        except (PatchError, ValueError) as exc:
+            return _err(exc)
+
+    @mcp.tool()
     def verify(goal: str, inputs: dict | None = None, timeout: float = 10.0) -> dict:
         """Run a goal's verify clauses (subprocess-isolated, cached by
         (goal,impl) hash — unchanged code is a cache hit). Passing binds

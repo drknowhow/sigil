@@ -11,7 +11,7 @@ from __future__ import annotations
 from pathlib import Path
 
 from sigil.core.ast import Fn, Goal, HostBlock, Module, Node, from_data, to_data
-from sigil.core.patch import apply_ops
+from sigil.core.patch import apply_ops, diff_data
 from sigil.core.pycanon import host_source
 from sigil.harness.context import SessionSheet
 from sigil.lang import printer
@@ -186,6 +186,39 @@ class Harness:
                 "patch the implementation subtree at this hash; do not regenerate the function"
             )
         return result
+
+    def patch_snippet(
+        self, ref: str, snippet: str, inputs: dict | None = None, timeout: float = 10.0
+    ) -> dict:
+        """Patch by replacement source (v1.1): Sigil tree-diffs the canonical
+        forms and emits the minimal ops itself — no path authoring."""
+        full = self.store.resolve(ref)
+        node = self.store.get(full)
+        if not isinstance(node, Fn):
+            raise ValueError(
+                f"{ref} is not a function. Remedy: snippet-patch targets fn definitions."
+            )
+        text = snippet.strip()
+        if isinstance(node.body, HostBlock):
+            from sigil.lift.python import lift_source
+
+            new_fn = lift_source(text + "\n", name="snippet").module.defs[0]
+        else:
+            new_fn = parse_module("module _snippet\n\n" + text + "\n").defs[0]
+        if getattr(new_fn, "name", None) != node.name:
+            raise ValueError(
+                f"Snippet defines {getattr(new_fn, 'name', '?')!r} but the target "
+                f"is {node.name!r} — the name is part of identity. Remedy: keep "
+                "the same name, or load_module a new definition instead."
+            )
+        ops = diff_data(to_data(node), to_data(new_fn))
+        if not ops:
+            return {
+                "new_hash": full,
+                "display": self._disp(full),
+                "verify": "unchanged: snippet is canonically identical",
+            }
+        return self.patch(full, ops, inputs=inputs, timeout=timeout)
 
     # ---- verify ------------------------------------------------------------------------
     def verify(self, ref: str, inputs: dict | None = None, timeout: float = 10.0) -> dict:

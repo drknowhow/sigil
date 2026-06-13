@@ -17,7 +17,7 @@ import time
 from dataclasses import dataclass, field
 
 from sigil.core.ast import Fn, Goal, Module
-from sigil.core.hash import digest_node
+from sigil.core.hash import digest_data, digest_node
 from sigil.lang.printer import pexpr as sigil_text
 from sigil.transpile.python import texpr, transpile_module
 
@@ -104,7 +104,56 @@ def run_verify(
         return Verdict(cached=True, **{**cached, "goal_hash": goal_hash, "impl_hash": impl_hash})
 
     py_src = transpile_module(module).python_src
-    script = py_src + _harness(goal, goal_name, inputs)
+    return _execute(store, goal, goal_name, py_src, inputs, timeout, goal_hash, impl_hash)
+
+
+def run_verify_py(
+    store,
+    module_source: str,
+    fn_name: str,
+    goal,
+    inputs: dict | None,
+    timeout: float = DEFAULT_TIMEOUT,
+) -> Verdict:
+    """Verify a @sigil.bind'ed PYTHON implementation: same runner, the
+    snapshot module source executes instead of transpiled Sigil (v1.1)."""
+    if inputs is None and goal.inputs:
+        names = ", ".join(p.name for p in goal.inputs)
+        raise ValueError(
+            f"Goal {goal.name!r} needs inputs ({names}). Remedy: pass inputs= "
+            "or record them via @sigil.bind(inputs=...)."
+        )
+    goal_hash = digest_node(goal)
+    impl_hash = digest_data(module_source)
+    cached = store.cache_get(goal_hash, impl_hash)
+    if cached is not None:
+        return Verdict(cached=True, **{**cached, "goal_hash": goal_hash, "impl_hash": impl_hash})
+    # Neutralize sigil inside the child: verification must never re-register
+    # bindings, and the subprocess may not have sigil importable at all.
+    shim = (
+        "import sys as __sys, types as __types\n"
+        "__shim = __types.ModuleType('sigil')\n"
+        "__shim.bind = lambda *a, **k: (lambda f: f)\n"
+        "__shim.SigilBindError = Exception\n"
+        "__shim.verify_bound = None\n"
+        "__sys.modules['sigil'] = __shim\n"
+    )
+    return _execute(
+        store, goal, fn_name, shim + module_source, inputs or {}, timeout, goal_hash, impl_hash
+    )
+
+
+def _execute(
+    store,
+    goal,
+    fn_name: str,
+    py_src: str,
+    inputs: dict,
+    timeout: float,
+    goal_hash: str,
+    impl_hash: str,
+) -> Verdict:
+    script = py_src + _harness(goal, fn_name, inputs)
     t0 = time.perf_counter()
     try:
         proc = subprocess.run(

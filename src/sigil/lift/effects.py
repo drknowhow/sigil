@@ -32,6 +32,42 @@ import builtins
 from sigil.core.ast import Effect, EffectRow
 from sigil.lift.rules import ANNOTATION_TAINTS, PATH_RULES
 
+_FS_READ_METHODS = frozenset(
+    {
+        "read",
+        "read_text",
+        "read_bytes",
+        "exists",
+        "is_file",
+        "is_dir",
+        "stat",
+        "iterdir",
+        "glob",
+        "rglob",
+        "readline",
+        "readlines",
+        "samefile",
+        "owner",
+    }
+)
+_FS_WRITE_METHODS = frozenset(
+    {
+        "write",
+        "write_text",
+        "write_bytes",
+        "mkdir",
+        "unlink",
+        "touch",
+        "rename",
+        "replace",
+        "rmdir",
+        "chmod",
+        "symlink_to",
+        "writelines",
+        "truncate",
+    }
+)
+
 
 def _match_rule(path: str) -> tuple[str | None, str | None] | None:
     parts = path.split(".")
@@ -56,13 +92,14 @@ class _FnAnalyzer:
         self.ret_taints = ret_taints or {}  # fn key -> origin of its return value
         self.return_origin: tuple | None = None
         self.env: dict[str, tuple | None] = {}
-        self.effects: set[tuple[str, bool]] = set()  # (name, uncertain)
+        self.effects: set[tuple[str, str | None, bool]] = set()  # (name, mode, uncertain)
         self.reasons: dict[str, str] = {}  # effect name -> first source seen
         self.callees: set[str] = set()
 
     def emit(self, name: str, uncertain: bool, reason: str) -> None:
-        self.effects.add((name, uncertain))
-        self.reasons.setdefault(name, reason.removeprefix("builtins."))
+        base, _, mode = name.partition(".")
+        self.effects.add((base, mode or None, uncertain))
+        self.reasons.setdefault(base, reason.removeprefix("builtins."))
 
     # -- name/expression origin resolution ------------------------------
     def lookup(self, name: str) -> tuple | None:
@@ -143,6 +180,18 @@ class _FnAnalyzer:
             return None  # method on a clean local — silent (see limitations.md)
         tag = f[0]
         if tag == "module":
+            if f[1] == "builtins.open":  # mode from the literal mode argument (v1.1)
+                mode = "read"
+                if (
+                    len(call.args) >= 2
+                    and isinstance(call.args[1], ast.Constant)
+                    and isinstance(call.args[1].value, str)
+                ):
+                    mode = "write" if any(c in call.args[1].value for c in "wax+") else "read"
+                elif len(call.args) >= 2 or call.keywords:
+                    mode = ""  # can't see the mode: unmoded superset, never under-report
+                self.emit(f"fs.{mode}" if mode else "fs", False, "open")
+                return ("taint", "fs")
             rule = _match_rule(f[1])
             if rule is None:  # unknown import — never silence
                 self.emit("unsafe", True, f"{f[1]} (unresolved import)")
@@ -154,7 +203,14 @@ class _FnAnalyzer:
                 return ("dynamic",)
             return ("taint", taint) if taint else None
         if tag == "taint":
-            self.emit(f[1], False, f"call on !{f[1]}-capable value")
+            eff = f[1]
+            if eff == "fs" and isinstance(call.func, ast.Attribute):
+                m = call.func.attr
+                if m in _FS_READ_METHODS:
+                    eff = "fs.read"
+                elif m in _FS_WRITE_METHODS:
+                    eff = "fs.write"
+            self.emit(eff, False, f"call on !{f[1]}-capable value")
             return f
         if tag == "localfn":
             self.callees.add(f[1])
@@ -360,10 +416,19 @@ def infer_module_effects(tree: ast.Module) -> dict[str, EffectRow]:
 
     out: dict[str, EffectRow] = {}
     for k, fx in rows.items():
-        merged: dict[str, bool] = {}
-        for name, uncertain in fx:
-            merged[name] = merged.get(name, True) and uncertain  # certain wins
-        effects = [Effect(name=n, scope=None, uncertain=u) for n, u in sorted(merged.items())]
+        by_name: dict[str, dict] = {}
+        for name, mode, uncertain in fx:
+            slot = by_name.setdefault(name, {"modes": set(), "uncertain": True})
+            slot["modes"].add(mode)
+            slot["uncertain"] = slot["uncertain"] and uncertain  # certain wins
+        effects = []
+        for name in sorted(by_name):
+            modes, unc = by_name[name]["modes"], by_name[name]["uncertain"]
+            if None in modes or {"read", "write"} <= modes:
+                effects.append(Effect(name=name, scope=None, uncertain=unc, mode=None))
+            else:
+                for m in sorted(modes):
+                    effects.append(Effect(name=name, scope=None, uncertain=unc, mode=m))
         out[k] = EffectRow(effects=effects, uncertain=True)  # Tier 2 = static guess
     return out
 
@@ -371,4 +436,7 @@ def infer_module_effects(tree: ast.Module) -> dict[str, EffectRow]:
 def render_row(row: EffectRow) -> str:
     if not row.effects:
         return "pure?" if row.uncertain else "pure"
-    return " ".join(f"!{e.name}{'?' if e.uncertain else ''}" for e in row.effects)
+    return " ".join(
+        f"!{e.name}{'.' + e.mode if e.mode else ''}{'?' if e.uncertain else ''}"
+        for e in row.effects
+    )

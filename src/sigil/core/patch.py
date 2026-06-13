@@ -103,3 +103,33 @@ def apply_ops(data: Any, ops: list[dict]) -> Any:
                     code="bad_path",
                 )
     return out
+
+
+def diff_data(old: Any, new: Any, _path: str = "") -> list[dict]:
+    """Minimal patch ops turning ``old`` into ``new`` (patch-by-snippet, v1.1).
+    Untouched subtrees produce no ops, by construction."""
+    if old == new:
+        return []
+    if (
+        isinstance(old, dict)
+        and isinstance(new, dict)
+        and old.get("kind") == new.get("kind")
+        and set(old) == set(new)
+    ):
+        ops: list[dict] = []
+        for k in sorted(old):
+            ops += diff_data(old[k], new[k], f"{_path}.{k}" if _path else k)
+        return ops
+    if isinstance(old, list) and isinstance(new, list) and len(old) == len(new):
+        ops = []
+        for i, (a, b) in enumerate(zip(old, new, strict=True)):
+            ops += diff_data(a, b, f"{_path}.{i}" if _path else str(i))
+        return ops
+    if not _path:
+        raise PatchError(
+            "Snippet replaces the entire definition (kind or shape changed at the "
+            "root). Remedy: keep the same definition kind and name; for wholesale "
+            "rewrites, load a new definition instead of patching.",
+            code="bad_op",
+        )
+    return [{"path": _path, "op": "replace", "value": copy.deepcopy(new)}]
