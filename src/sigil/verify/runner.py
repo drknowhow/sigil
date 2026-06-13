@@ -24,6 +24,17 @@ from sigil.transpile.python import texpr, transpile_module
 SENTINEL = "__SIGIL_VERDICT__"
 DEFAULT_TIMEOUT = 10.0
 
+# Neutralize `import sigil` inside the verify child: it must never re-register
+# bindings, and the subprocess may not even have sigil importable.
+_PY_SHIM = (
+    "import sys as __sys, types as __types\n"
+    "__shim = __types.ModuleType('sigil')\n"
+    "__shim.bind = lambda *a, **k: (lambda f: f)\n"
+    "__shim.SigilBindError = Exception\n"
+    "__shim.verify_bound = None\n"
+    "__sys.modules['sigil'] = __shim\n"
+)
+
 
 @dataclass(frozen=True)
 class Verdict:
@@ -148,16 +159,7 @@ def run_verify_py(
     cached = store.cache_get(goal_hash, impl_hash, inputs_hash)
     if cached is not None:
         return Verdict(cached=True, **{**cached, "goal_hash": goal_hash, "impl_hash": impl_hash})
-    # Neutralize sigil inside the child: verification must never re-register
-    # bindings, and the subprocess may not have sigil importable at all.
-    shim = (
-        "import sys as __sys, types as __types\n"
-        "__shim = __types.ModuleType('sigil')\n"
-        "__shim.bind = lambda *a, **k: (lambda f: f)\n"
-        "__shim.SigilBindError = Exception\n"
-        "__shim.verify_bound = None\n"
-        "__sys.modules['sigil'] = __shim\n"
-    )
+    shim = _PY_SHIM
     return _execute(
         store, goal, fn_name, shim + module_source, inputs or {}, timeout, goal_hash, impl_hash
     )
@@ -316,3 +318,30 @@ def run_verify_invariant(
         index.setdefault("invariant_bindings", {})[inv_hash] = {"impls": impls}
         store._write_index(index)
     return {"name": inv_name, "status": status, "clauses": clauses, "invariant_hash": inv_hash}
+
+
+def run_verify_py_many(
+    module_source: str, fn_name: str, goal, cases: list[dict], timeout: float = DEFAULT_TIMEOUT
+) -> list | None:
+    """Run a lifted-Python fn over many input cases in ONE subprocess; return
+    the raw per-case rows [[i, clause_text, ok, detail], ...]. A call that
+    raises is tagged clause '<call>' (so the caller can SKIP inapplicable
+    inputs rather than treat them as counterexamples). Used by Tier-3
+    proposal validation (v2.0.2)."""
+    script = _PY_SHIM + module_source + _harness(goal, fn_name, cases)
+    try:
+        proc = subprocess.run(
+            [sys.executable, "-c", script],
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            errors="replace",
+            timeout=timeout,
+            stdin=subprocess.DEVNULL,
+        )
+    except subprocess.TimeoutExpired:
+        return None
+    line = next((ln for ln in proc.stdout.splitlines() if ln.startswith(SENTINEL)), None)
+    if proc.returncode != 0 or line is None:
+        return None
+    return json.loads(line[len(SENTINEL) :])

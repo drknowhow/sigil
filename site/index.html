@@ -371,9 +371,10 @@
       regressed or silently vanished — one line in Actions. <code>sigil watch</code> re-verifies
       on every save. The seatbelt is always on.</p></div>
     <div class="card"><h3><span class="ic">∴</span>Tier-3 propose / validate</h3>
-      <p>Your agent <code>propose_contract</code>s verify clauses; they register
-      <em>provisional</em> and can only bind by passing verification — guesses never launder into
-      specs. <code>sigil from-pytest</code> turns parametrize tables into reviewable goal drafts.</p></div>
+      <p>Your agent <code>propose_contract</code>s verify clauses; Sigil validates them against
+      <em>independently generated</em> inputs (not the agent's own example) and binds only on zero
+      counterexamples over many cases — guesses can't launder into specs. <code>sigil from-pytest</code>
+      turns parametrize tables into reviewable goal drafts.</p></div>
   </div>
 </section>
 
@@ -562,7 +563,7 @@ patch <span class="h">#6e01</span> { body.stmts.0.value.right.val := <span class
   heavily dynamic Python and R earn <code>!unsafe?</code> rather than answers; R Tier-1 is token-canonical, not a full
   parser; lifting is one-directional; verify network-blocking is best-effort; JVM/JS frontends are v3. CI runs on Linux 3.11–3.13 + Windows.</p>
   <p style="margin-top:14px">Get started: <code>pip install -e ".[dev,harness]"</code> → <code>sigil lift your/code</code> →
-  <code>sigil serve --root .</code> · docs/quickstart.md · Sigil v2.0.1, 2026</p>
+  <code>sigil serve --root .</code> · docs/quickstart.md · Sigil v2.0.2, 2026</p>
 </footer>
 </div><!-- /view-home -->
 
@@ -575,7 +576,7 @@ patch <span class="h">#6e01</span> { body.stmts.0.value.right.val := <span class
     <p class="gh4">1 · Setup</p>
     <div class="step"><span class="sn">1.1</span><div>Requirements: <b>Python 3.11+</b> and pip. From the <code>sigil-build/</code> repo root:</div></div>
     <div class="term copy"><button class="cp">copy</button><pre>pip install -e ".[dev,harness]"   <span class="c"># core + tests + MCP server</span>
-sigil --version                    <span class="c"># sigil 2.0.1</span></pre></div>
+sigil --version                    <span class="c"># sigil 2.0.2</span></pre></div>
     <p class="note">Core installs are lean: stdlib + <code>cbor2</code>. The <code>[harness]</code> extra adds the
     <code>mcp</code> package for <kbd>sigil serve</kbd>; <code>[dev]</code> adds pytest/hypothesis/ruff.</p>
   </section>
@@ -729,8 +730,18 @@ patch(<span class="h">#6e01</span>, [{"path": "body.stmts.0.value.right.val", "o
 <div id="view-change" hidden>
   <h2 class="gtitle" style="margin-bottom:8px">Changelog</h2>
   <p class="lede">Six releases, every one shipped with the suite green and tagged in git
-  (<code>v1.0.0 → v2.0.1</code>). Newest first.</p>
+  (<code>v1.0.0 → v2.0.2</code>). Newest first.</p>
   <div class="clog">
+
+    <div class="rel">
+      <div class="ver">v<b>2.0.2</b><span class="when">2026-06-13 · Tier-3 validation hardened</span></div>
+      <div class="tagline">An agent can no longer grade its own homework.</div>
+      <ul>
+        <li><b>Fixed: <code>propose_contract</code> proposer-graded validation</b> — proposals now validate against <em>independently generated</em> inputs (typed generator, or edge-biased probes for untyped lifted params), not the one witness the agent chose. A false rule that passed on a lucky input is now refuted by a generated counterexample.</li>
+        <li>Binds only on <b>zero counterexamples over ≥8 applicable cases</b>; inapplicable inputs (wrong shape) are skipped, not counted; thin evidence stays <code>provisional</code>.</li>
+        <li><b>Evidence strength is visible</b> on the sheet — <code>tier-3 verified (40 cases)</code> vs <code>rejected (counterexample)</code> — so a proven rule reads differently from a lucky one.</li>
+      </ul>
+    </div>
 
     <div class="rel">
       <div class="ver">v<b>2.0.1</b><span class="when">2026-06-13 · second field report fixes</span></div>

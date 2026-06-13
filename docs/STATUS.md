@@ -1,5 +1,17 @@
 # STATUS
 
+## Session 2026-06-13 (v2.0.2 — Tier-3 validation hardened)
+
+- **Third field report (addendum)**: `propose_contract` let the proposer supply both the
+  rule and the single validating input — a false rule could bind `verified`. Fixed
+  (D-042): proposals validate against independently generated inputs (typed generator /
+  edge-biased probe sampler for untyped lifted params), bind only on 0 counterexamples
+  over >=8 applicable cases, skip inapplicable shapes, and surface evidence strength on
+  the sheet. Disposition: firstuse/V2_ADDENDUM_RESPONSE.md.
+- **Suite:** 191 passed + 1 skip; ruff clean. Exploit reproduced + closed in
+  tests/v20/test_propose_validation.py. v2.0.2 tagged.
+
+
 ## Session 2026-06-12 (v2.0.0 — roadmap-next complete)
 
 - **Waves 1–3 shipped autonomously**: v1.1.0 (effect modes + module budgets,

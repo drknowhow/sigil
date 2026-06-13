@@ -15,16 +15,17 @@ from sigil.core.ast import Goal, TypeExpr
 def _gen_for(ty: TypeExpr | None, rng: random.Random):
     if ty is None:
         raise ValueError("untyped parameter")
-    if ty.name == "[]":
-        inner = ty.args[0]
+    if ty.name in ("[]", "list"):
+        inner = ty.args[0] if ty.args else TypeExpr(name="Int")
         return [_gen_for(inner, rng) for _ in range(rng.randint(0, 5))]
-    if ty.name == "Int" or ty.name == "U64":
+    name = ty.name
+    if name in ("Int", "U64", "int"):
         return rng.randint(-100, 100)
-    if ty.name == "F64":
+    if name in ("F64", "float"):
         return round(rng.uniform(-1000.0, 1000.0), 4)
-    if ty.name == "Bool":
+    if name in ("Bool", "bool"):
         return rng.random() < 0.5
-    if ty.name == "Str":
+    if name in ("Str", "str"):
         return "".join(rng.choice("abcdefgh xyz") for _ in range(rng.randint(0, 8)))
     raise ValueError(f"no generator for type {ty.name!r}")
 
@@ -77,3 +78,48 @@ def run_property_check(
         "counterexamples": counterexamples,
         "detail": result.get("detail"),
     }
+
+
+# Type-agnostic edge-biased probe pool (v2.0.2): for lifted Python whose params
+# carry no type. Cases that raise (wrong shape) are skipped by the caller, not
+# counted against the proposal; cases that RETURN are the evidence.
+_PROBE_POOL = [
+    0,
+    1,
+    -1,
+    2,
+    -2,
+    5,
+    -5,
+    10,
+    -10,
+    100,
+    -100,
+    1000,
+    -1000,
+    0.5,
+    -0.5,
+    3.14,
+    "",
+    "a",
+    "abc",
+    True,
+    False,
+]
+
+
+def sample_untyped(
+    param_names: list[str], n: int, seed: int = 0, hint: dict | None = None
+) -> list[dict]:
+    """N edge-biased input cases for untyped params. Deterministic (seeded).
+    Includes the proposer's hint as ONE case (never sufficient on its own)."""
+    rng = random.Random(seed)
+    cases: list[dict] = []
+    if hint is not None:
+        cases.append(dict(hint))
+    # a few all-same-value rows hit boundaries (x==lo==hi etc.)
+    for v in (0, 1, -1, 100, -100, 1000):
+        cases.append({p: v for p in param_names})
+    while len(cases) < n:
+        cases.append({p: rng.choice(_PROBE_POOL) for p in param_names})
+    return cases[:n]

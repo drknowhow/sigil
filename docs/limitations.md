@@ -27,5 +27,9 @@
    network-sensitive machine; full sandboxing is a v2 candidate.
 9. **Effect budgets compare by name, not scope** (D-015): `!net(api.a.com)` admits
    any host in v1.0. Scopes are recorded and displayed, not enforced.
-10. **Goal verify inputs are caller-provided** (D-020): there is no recorded-inputs
-    registry yet; a goal without good inputs is only as verified as the inputs given.
+10. **Goal verify inputs are caller-provided** (D-020): a human-written goal is only as
+    verified as the inputs given. **Tier-3 *proposals* are stronger (v2.0.2, D-042):**
+    they validate against independently generated inputs — the proposer's example is a
+    hint, never the proof — and bind only on zero counterexamples over many cases, with
+    evidence strength shown on the sheet. Untyped lifted params use edge-biased probing;
+    when too few cases apply, the proposal stays provisional rather than claim verified.

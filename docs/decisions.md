@@ -241,3 +241,14 @@ This lets the new Windows + 3.13 CI lanes run without reddening on expected AST 
 while still catching real regressions on the pinned lane. from-pytest now derives the
 expected column from the assert RHS (not a hard-coded name); `sigil migrate` takes `--store`
 or positional; rejected Tier-3 proposals get a distinct sheet status line.
+
+**D-042** (2026-06-13) — **Tier-3 proposals validate against independently generated
+inputs, never the proposer's witness (V2_REPORT addendum).** The agent supplied both the
+rule and the single input that "verified" it — grading its own homework, so a false rule
+could bind. Now propose_contract generates inputs (typed generator when params have types;
+edge-biased probe sampler when they don't), binds only on zero counterexamples over >=8
+APPLICABLE cases, and treats a call that raises as skip (not a refutation) so untyped
+generation neither false-rejects nor false-verifies. Insufficient applicable cases ->
+"provisional: insufficient evidence". Evidence (method, case counts, counterexamples) is
+returned and shown on the sheet (`tier-3 verified (N cases)`), so a battle-tested rule is
+distinguishable from a lucky one. A tightening of D-038, not a redesign.

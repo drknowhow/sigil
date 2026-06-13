@@ -1,5 +1,15 @@
 # Changelog
 
+## v2.0.2 — 2026-06-13 (Tier-3 proposal validation hardened)
+
+- **Fixed: `propose_contract` no longer lets the proposer grade its own homework**
+  (V2_REPORT addendum). Proposals are validated against INDEPENDENTLY GENERATED inputs
+  (typed generator, or an edge-biased probe sampler for untyped lifted params), not the
+  one witness the agent supplied. Binds only on zero counterexamples over >=8 applicable
+  cases; a case whose call raises is skipped (so untyped generation doesn't false-reject);
+  thin evidence stays `provisional`. Evidence strength is now visible on the sheet
+  (`tier-3 verified (N cases)`), so a proven rule is distinguishable from a lucky one.
+
 ## v2.0.1 — 2026-06-13 (second field report fixes)
 
 - **Fixed: Windows/encoding crash** (V2_REPORT Bug 2). CLI pins stdout/stderr to UTF-8;

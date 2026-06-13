@@ -340,16 +340,111 @@ class Harness:
         goal = Goal(
             name=fn.name,
             intent=intent,
-            inputs=[_Param(name=p.name) for p in fn.params],
+            inputs=[_Param(name=p.name, ty=p.ty) for p in fn.params],
             verify=parsed,
         )
         goal_hash = self.store.put(goal)
         self.store.register_goal(goal_hash, None, fn.name, extra={"tier": 3, "impl": full})
         self.sheet_log.append(f"{self._disp(goal_hash)} goal {fn.name} proposed (tier 3)")
         result: dict = {"goal_hash": goal_hash, "display": self._disp(goal_hash)}
-        if inputs is None and goal.inputs:
-            result["verify"] = "provisional: inputs required to validate"
+
+        if not isinstance(fn.body, HostBlock) or fn.body.lang not in ("python",):
+            result["verify"] = "provisional: validation supports python-lifted fns in v2.0"
             return result
+
+        # v2.0.2 (V2_REPORT addendum): the proposer must NOT grade its own
+        # homework. Validate against INDEPENDENTLY GENERATED inputs, never the
+        # one witness the proposer chose. The hint is included as a single case
+        # but can never bind on its own.
+        from sigil.verify.propgen import generate_inputs, sample_untyped
+        from sigil.verify.runner import run_verify_py_many
+
+        MIN_CASES, N = 8, 60
+        param_names = [p.name for p in goal.inputs]
+        typed = bool(goal.inputs) and all(p.ty is not None for p in fn.params)
+        if not goal.inputs:
+            cases, method = [{}], "no-args"
+        elif typed:
+            try:
+                cases = generate_inputs(goal, n=N, seed=7)
+            except ValueError:
+                typed = False
+                cases = sample_untyped(param_names, n=N, seed=7, hint=inputs)
+            else:
+                method = "typed-generated"
+                if inputs is not None:
+                    cases = [inputs, *cases]
+        if not typed and goal.inputs:
+            cases = sample_untyped(param_names, n=N, seed=7, hint=inputs)
+            method = "edge-probe (untyped params)"
+
+        rows = run_verify_py_many(ir_source(fn.body.data), fn.name, goal, cases)
+        if rows is None:
+            result["verify"] = "error: validation subprocess produced no verdict"
+            result["evidence"] = {
+                "method": method,
+                "supporting_cases": 0,
+                "counterexamples": [],
+                "cases_generated": len(cases),
+            }
+            return result
+
+        # classify each case: a '<call>' False row means the input shape didn't
+        # apply (SKIP); any other False row is a real counterexample.
+        per_case: dict[int, dict] = {}
+        for i, text, ok, detail in rows:
+            c = per_case.setdefault(i, {"ok": True, "applied": True, "detail": None})
+            if text == "<call>" and not ok:
+                c["applied"] = False
+            elif not ok:
+                c["ok"] = False
+                c["detail"] = detail
+        supporting = [i for i, c in per_case.items() if c["applied"] and c["ok"]]
+        counterex = [
+            {"inputs": cases[i], "detail": per_case[i]["detail"]}
+            for i, c in per_case.items()
+            if c["applied"] and not c["ok"]
+        ]
+
+        ev = {
+            "method": method,
+            "cases_generated": len(cases),
+            "supporting_cases": len(supporting),
+            "counterexamples": counterex[:3],
+        }
+        result["evidence"] = ev
+
+        if counterex:
+            ce = counterex[0]
+            result["verify"] = {
+                "status": "fail",
+                "detail": f"counterexample: {ce['inputs']} -> {ce['detail']}",
+            }
+            self.sheet_log.append(
+                f"{self._disp(goal_hash)} goal {fn.name} tier-3 rejected (counterexample)"
+            )
+            return result
+        if len(supporting) < MIN_CASES:
+            result["verify"] = (
+                f"provisional: insufficient evidence "
+                f"({len(supporting)} applicable cases < {MIN_CASES}); "
+                "propose parameter types or recorded inputs"
+            )
+            self.sheet_log.append(
+                f"{self._disp(goal_hash)} goal {fn.name} tier-3 provisional (thin evidence)"
+            )
+            return result
+
+        # no counterexample over many independent cases -> bind, with evidence
+        self.store.bind(goal_hash, full)
+        self.store.register_goal(
+            goal_hash, None, fn.name, extra={"tier": 3, "impl": full, "evidence": ev}
+        )
+        result["verify"] = {"status": "pass", "cases": len(supporting)}
+        self.sheet_log.append(
+            f"{self._disp(goal_hash)} goal {fn.name} tier-3 verified ({len(supporting)} cases)"
+        )
+        return result
         if not isinstance(fn.body, HostBlock) or fn.body.lang not in ("python",):
             result["verify"] = "provisional: validation supports python-lifted fns in v2.0"
             return result
