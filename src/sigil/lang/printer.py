@@ -5,7 +5,7 @@ emitted; ASCII aliases are parse-only (docs/grammar.md alias table)."""
 from __future__ import annotations
 
 from sigil.core import expr as E
-from sigil.core.ast import Contract, EffectRow, Fn, Goal, Module, Node, Param, TypeExpr
+from sigil.core.ast import Contract, EffectRow, Fn, Goal, Invariant, Module, Node, Param, TypeExpr
 
 GLYPH = {"and": "∧", "or": "∨", "<=": "≤", ">=": "≥", "!=": "≠"}
 PREC = {
@@ -199,6 +199,22 @@ def pgoal(g: Goal) -> str:
     return "\n".join(lines)
 
 
+def pinv(inv: Invariant) -> str:
+    lines = [f"invariant {inv.name} {{"]
+    if inv.inputs:
+        lines.append(f"  in: {pparams(inv.inputs)}")
+    lines.append(f"  over: {', '.join(inv.over)}")
+    if inv.inputs_ref is not None:
+        esc = "".join(_ESC.get(c, c) for c in inv.inputs_ref)
+        lines.append(f'  inputs: "{esc}"')
+    if inv.verify:
+        lines.append("  verify:")
+        for v in inv.verify:
+            lines.append(f"    {pexpr(v.expr)}")
+    lines.append("}")
+    return "\n".join(lines)
+
+
 def print_module(mod: Module) -> str:
     head = f"module {mod.name}"
     if mod.fx is not None:
@@ -209,6 +225,8 @@ def print_module(mod: Module) -> str:
     for d in mod.defs:
         if isinstance(d, Goal):
             parts.append(pgoal(d))
+        elif isinstance(d, Invariant):
+            parts.append(pinv(d))
         elif isinstance(d, Fn):
             parts.append(pfn(d))
         else:

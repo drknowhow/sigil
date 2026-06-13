@@ -11,7 +11,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 
 from sigil.core import expr as E
-from sigil.core.ast import Fn, Goal, Module, Node, Param, TypeExpr
+from sigil.core.ast import Fn, Goal, Invariant, Module, Node, Param, TypeExpr
 from sigil.lang.printer import pexpr as sigil_text
 
 TYPE_MAP = {
@@ -203,6 +203,8 @@ def transpile_module(mod: Module) -> TranspileResult:
             parts.append("\n".join(tfn(d)) + "\n")
         elif isinstance(d, Goal):
             tests[f"test_{d.name}"] = tgoal_test(d, mod.name)
+        elif isinstance(d, Invariant):
+            pass  # invariants execute via the verify runner, not generated tests
     return TranspileResult(
         module_name=mod.name, python_src="\n\n".join(parts) + "\n", test_modules=tests
     )

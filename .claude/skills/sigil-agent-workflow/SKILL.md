@@ -38,10 +38,11 @@ Ops address the canonical data form shown by `expand`:
 - **Derive paths from `expand(hash, form="canonical")`** — it returns the
   exact data structure ops address. Never guess paths from the source view.
 - Sigil-written fns: `body.stmts.<i>...`; literals end in `.val`.
-- Lifted Python fns are wrapped: the host AST lives under `body.data`, so
-  paths look like `body.data.body.0.value.right.right` (Python AST field
-  names; a Constant is a `["Constant", type, repr]` triple — index `2` is
-  the repr you replace).
+- Lifted fns wrap a neutral IR under `body.data` (v2.0): a def is
+  `["def", name, args, [body], …]`, so paths are positional —
+  `body.data.3.0.1.2` reaches the repr of a returned constant
+  (`["const", type, repr]`). Always derive from `expand(hash,
+  form="canonical")`; prefer `patch_snippet` and let Sigil compute paths.
 - Malformed ops fail with the op index + failing token (`code: bad_path`).
   Remedy: `expand` the hash and re-derive the path; don't guess twice.
 

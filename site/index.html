@@ -144,7 +144,7 @@
 
 <div id="view-home">
 <header>
-  <div class="tag">v1.0.1 · all 6 phase gates green · 136 tests · field-tested over live MCP</div>
+  <div class="tag">v2.0.0 · python + R · invariants · 178 tests · field-tested over live MCP</div>
   <h1>SIGIL</h1>
   <p class="sub">A <b>contract-first</b>, <b>content-addressed</b> language and toolchain for
   human&thinsp;↔&thinsp;AI coding. Intent is code. Effects are visible. Edits are patches.
@@ -281,9 +281,9 @@
         <div class="vscene" data-dur="300">
           <div class="vglow1"></div>
           <div class="vt vlabel" data-at="2" style="color:var(--violet)">measured, not estimated</div>
-          <div class="vt vbig" data-at="10" style="margin:8px 0 26px">v1.0.1 — every number is from the actual build</div>
+          <div class="vt vbig" data-at="10" style="margin:8px 0 26px">v2.0.0 — every number is from the actual build</div>
           <div class="vrow">
-            <div class="vcard vt" data-at="22"><div class="vstat"><span data-count data-from="0" data-to="136" data-start="26" data-cdur="40"></span></div><div class="vdim" style="font-size:15px">tests green · 92% core coverage</div></div>
+            <div class="vcard vt" data-at="22"><div class="vstat"><span data-count data-from="0" data-to="178" data-start="26" data-cdur="40"></span></div><div class="vdim" style="font-size:15px">tests green · 92% core coverage</div></div>
             <div class="vcard vt" data-at="36"><div class="vstat"><span data-count data-from="0" data-to="5.9" data-start="40" data-cdur="40" data-dec="1"></span>×</div><div class="vdim" style="font-size:15px">measured context reduction</div></div>
             <div class="vcard vt" data-at="50"><div class="vstat"><span data-count data-from="9" data-to="0" data-start="54" data-cdur="30"></span></div><div class="vdim" style="font-size:15px">effect under-reports / 33 fixtures</div></div>
             <div class="vcard vt" data-at="64"><div class="vstat">&lt;50ms</div><div class="vdim" style="font-size:15px">verify cache hit, unchanged code</div></div>
@@ -396,7 +396,7 @@ patch <span class="h">#6e01</span> { body.stmts.0.value.right.val := <span class
       (2.6% over-report). Hand-audited 30-function sample of <code>requests</code>: within the &lt;10% gate; both discovered misses became fixtures and were fixed.</p></div>
     <div class="card"><h3>Verification</h3><p><b class="pos" style="font-size:26px">&lt;50 ms</b><br>cache hit on unchanged code (gate-tested).
       Infinite-loop contracts killed by timeout; crashing code subprocess-isolated; failing contracts never bind.</p></div>
-    <div class="card"><h3>Build quality</h3><p><b class="pos" style="font-size:26px">136</b><br>tests green · 92% coverage on core/lift/transpile ·
+    <div class="card"><h3>Build quality</h3><p><b class="pos" style="font-size:26px">178</b><br>tests green · 92% coverage on core/lift/transpile ·
       ruff clean · property tests for hashing, round-trips, patch≡re-lift, R1 · CI on 3.11/3.12.</p></div>
   </div>
 </section>
@@ -419,7 +419,7 @@ patch <span class="h">#6e01</span> { body.stmts.0.value.right.val := <span class
   Python earns <code>!unsafe?</code> rather than answers; lifting is one-directional in v1.0; verify network-blocking
   is best-effort. The Tier-3 contract proposer was the plan's sanctioned cut.</p>
   <p style="margin-top:14px">Get started: <code>pip install -e ".[dev,harness]"</code> → <code>sigil lift your/code</code> →
-  <code>sigil serve --root .</code> · docs/quickstart.md · Sigil v1.0.1, 2026</p>
+  <code>sigil serve --root .</code> · docs/quickstart.md · Sigil v2.0.0, 2026</p>
 </footer>
 </div><!-- /view-home -->
 
@@ -432,7 +432,7 @@ patch <span class="h">#6e01</span> { body.stmts.0.value.right.val := <span class
     <p class="gh4">1 · Setup</p>
     <div class="step"><span class="sn">1.1</span><div>Requirements: <b>Python 3.11+</b> and pip. From the <code>sigil-build/</code> repo root:</div></div>
     <div class="term copy"><button class="cp">copy</button><pre>pip install -e ".[dev,harness]"   <span class="c"># core + tests + MCP server</span>
-sigil --version                    <span class="c"># sigil 1.0.1</span></pre></div>
+sigil --version                    <span class="c"># sigil 2.0.0</span></pre></div>
     <p class="note">Core installs are lean: stdlib + <code>cbor2</code>. The <code>[harness]</code> extra adds the
     <code>mcp</code> package for <kbd>sigil serve</kbd>; <code>[dev]</code> adds pytest/hypothesis/ruff.</p>
   </section>
@@ -672,7 +672,7 @@ addEventListener('DOMContentLoaded', () => {
   camera.position.set(0, 0, 16);
 
   // --- a content-addressed constellation: nodes (definitions) + edges (call graph)
-  const N = 136;                                   // one node per passing test, naturally
+  const N = 178;                                   // one node per passing test, naturally
   const nodes = [];
   const group = new THREE.Group();
   const geoA = new THREE.IcosahedronGeometry(0.16, 0);

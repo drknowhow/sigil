@@ -1,7 +1,7 @@
 ; digest sheet — seed/demo_module.py  (Tier 1+2 mechanical lift)
-#f22c fetch_prices(tickers, start, end) -> ? !fs !net
-#d6e7 dedupe(xs) -> ? pure?
-#6d25 moving_average(values, window int) -> list pure?
-#6447 jitter_backoff(attempt int) -> float !rand
+#2a01 fetch_prices(tickers, start, end) -> ? !fs !net
+#d2a9 dedupe(xs) -> ? pure?
+#f0b9 moving_average(values, window int) -> list pure?
+#5f66 jitter_backoff(attempt int) -> float !rand
 ; context cost: full source ≈275 tok · digest sheet ≈46 tok · 6× smaller (chars/4 estimate)
 ; '?' marks static guesses — Tier 2 over-approximates, never trusts.

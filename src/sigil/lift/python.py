@@ -13,7 +13,7 @@ from dataclasses import dataclass, field
 
 from sigil.core.ast import EffectRow, Field, Fn, HostBlock, Import, Module, Param, Record, TypeExpr
 from sigil.core.hash import DigestNamer, digest_data
-from sigil.core.pycanon import canon_node
+from sigil.core.ir import lower_stmt
 from sigil.lift.effects import infer_module_effects, render_row
 
 
@@ -60,7 +60,7 @@ def _lift_fn(node: ast.FunctionDef | ast.AsyncFunctionDef, fx: EffectRow) -> Fn:
         params=params,
         ret=_type_expr(node.returns),
         fx=fx,
-        body=HostBlock(lang="python", data=canon_node(node)),
+        body=HostBlock(lang="python", data=lower_stmt(node)),
     )
 
 
@@ -113,7 +113,7 @@ def lift_source(source: str, name: str = "<module>") -> LiftResult:
             defs.append(fn)
             entries.append(
                 SheetEntry(
-                    digest=digest_data(canon_node(s)),
+                    digest=digest_data(lower_stmt(s)),
                     name=s.name,
                     sig=_signature(s),
                     effects=render_row(fx),
@@ -130,7 +130,7 @@ def lift_source(source: str, name: str = "<module>") -> LiftResult:
             defs.append(rec)
             entries.append(
                 SheetEntry(
-                    digest=digest_data(canon_node(s)),
+                    digest=digest_data(lower_stmt(s)),
                     name=s.name,
                     sig="{" + ", ".join(f.name for f in rec.fields) + "}",
                     effects="rec",
@@ -144,7 +144,7 @@ def lift_source(source: str, name: str = "<module>") -> LiftResult:
             ):
                 entries.append(
                     SheetEntry(
-                        digest=digest_data(canon_node(mn)),
+                        digest=digest_data(lower_stmt(mn)),
                         name=f"{s.name}.{m.name}",
                         sig=_signature(mn),
                         effects=render_row(m.fx),

@@ -14,6 +14,7 @@ KEYWORDS = {
     "use",
     "goal",
     "fn",
+    "invariant",
     "pre",
     "post",
     "ret",

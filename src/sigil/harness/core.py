@@ -10,9 +10,9 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from sigil.core.ast import Fn, Goal, HostBlock, Module, Node, from_data, to_data
+from sigil.core.ast import Fn, Goal, HostBlock, Invariant, Module, Node, from_data, to_data
+from sigil.core.ir import ir_source
 from sigil.core.patch import apply_ops, diff_data
-from sigil.core.pycanon import host_source
 from sigil.harness.context import SessionSheet
 from sigil.lang import printer
 from sigil.lang.parser import parse_module
@@ -85,7 +85,7 @@ class Harness:
     def load_sigil_source(self, src: str, name: str = "<input>") -> dict:
         mod = parse_module(src)
         module_hash = self.store.put(mod)
-        info: dict = {"module": module_hash, "goals": {}, "fns": {}}
+        info: dict = {"module": module_hash, "goals": {}, "fns": {}, "invariants": {}}
         for d in mod.defs:
             if isinstance(d, Goal):
                 gh = self.store.put(d)
@@ -94,6 +94,13 @@ class Harness:
                 fx = printer.pfx(d.fx) if d.fx is not None else "pure"
                 self.sheet_log.append(
                     f"{self._disp(gh)} goal {d.name} {fx} {self.store.status(gh)}"
+                )
+            elif isinstance(d, Invariant):
+                ih = self.store.put(d)
+                info["invariants"][d.name] = ih
+                self.store.register_goal(ih, module_hash, d.name, extra={"kind": "invariant"})
+                self.sheet_log.append(
+                    f"{self._disp(ih)} invariant {d.name} over {', '.join(d.over)}"
                 )
             elif isinstance(d, Fn):
                 fh = self.store.put(d)
@@ -127,7 +134,7 @@ class Harness:
     def _project(self, node: Node) -> str:
         if isinstance(node, Fn):
             if isinstance(node.body, HostBlock):
-                return host_source(node.body.data)
+                return ir_source(node.body.data)
             return printer.pfn(node)
         if isinstance(node, Goal):
             return printer.pgoal(node)
@@ -156,10 +163,25 @@ class Harness:
             result["verify"] = "unverified: not an implementation fn"
             return result
         goal_entry = next(
-            ((gh, e) for gh, e in self.store.goals().items() if e["name"] == new_node.name), None
+            (
+                (gh, e)
+                for gh, e in self.store.goals().items()
+                if e["name"] == new_node.name and e.get("kind") != "invariant"
+            ),
+            None,
         )
         if goal_entry is None:
             result["verify"] = "unverified: no goal bound"
+            module = self._module_containing(new_node.name)
+            if module is not None:
+                defs = [
+                    new_node if (isinstance(d, Fn) and d.name == new_node.name) else d
+                    for d in module.defs
+                ]
+                new_module = Module(
+                    name=module.name, imports=module.imports, defs=defs, fx=module.fx
+                )
+                result.update(self._reverify_invariants(new_module, new_node.name, inputs, timeout))
             return result
         goal_hash, entry = goal_entry
         goal = self.store.get(goal_hash)
@@ -178,6 +200,7 @@ class Harness:
         self.store.register_goal(goal_hash, new_module_hash, goal.name)
         verdict = run_verify(self.store, new_module, goal.name, inputs, timeout=timeout)
         result["verify"] = verdict.to_dict()
+        result.update(self._reverify_invariants(new_module, new_node.name, inputs, timeout))
         if verdict.status != "pass":
             # R3: structured feedback aimed at a patch of the failing subtree,
             # never "regenerate the function". Keep it small.
@@ -219,6 +242,101 @@ class Harness:
                 "verify": "unchanged: snippet is canonically identical",
             }
         return self.patch(full, ops, inputs=inputs, timeout=timeout)
+
+    def _module_containing(self, fn_name: str):
+        for _gh, e in self.store.goals().items():
+            if e.get("module"):
+                try:
+                    m = self.store.get(e["module"])
+                except ValueError:
+                    continue
+                if isinstance(m, Module) and any(
+                    isinstance(d, Fn) and d.name == fn_name for d in m.defs
+                ):
+                    return m
+        return None
+
+    def _reverify_invariants(
+        self, module: Module, fn_name: str, inputs: dict | None, timeout: float
+    ) -> dict:
+        """R3, extended to invariants: patching a fn re-verifies every
+        invariant that ranges over it."""
+        from sigil.verify.runner import run_verify_invariant
+
+        results = []
+        for d in module.defs:
+            if isinstance(d, Invariant) and fn_name in d.over:
+                try:
+                    results.append(
+                        run_verify_invariant(self.store, module, d.name, inputs, timeout=timeout)
+                    )
+                except ValueError as exc:
+                    results.append({"name": d.name, "status": "error", "detail": str(exc)})
+        return {"invariants": results} if results else {}
+
+    def verify_invariant(self, ref: str, inputs: dict | None = None, timeout: float = 10.0) -> dict:
+        from sigil.verify.runner import run_verify_invariant
+
+        inv_hash = self.store.resolve(ref)
+        inv = self.store.get(inv_hash)
+        if not isinstance(inv, Invariant):
+            raise ValueError(f"{ref} is not an invariant. Remedy: pass an invariant hash.")
+        entry = self.store.goals().get(inv_hash)
+        if entry is None or entry.get("module") is None:
+            raise ValueError(
+                f"Invariant {ref} has no registered module. Remedy: load the module first."
+            )
+        module = self.store.get(entry["module"])
+        return run_verify_invariant(self.store, module, inv.name, inputs, timeout=timeout)
+
+    def propose_contract(
+        self,
+        fn_ref: str,
+        clauses: list[str],
+        inputs: dict | None = None,
+        intent: str = "proposed by agent (Tier 3)",
+    ) -> dict:
+        """Tier 3 (v2.0): an agent PROPOSES verify clauses for a lifted fn.
+        The proposal registers provisional and is validated immediately when
+        inputs allow — it can only bind by passing verification. A proposer
+        that skipped this step would launder guesses into specs."""
+        from sigil.core.ast import Param as _Param
+        from sigil.core.ast import VerifyClause as _VC
+        from sigil.core.ir import ir_source
+        from sigil.lang.parser import Parser, tokenize
+        from sigil.verify.runner import run_verify_py
+
+        full = self.store.resolve(fn_ref)
+        fn = self.store.get(full)
+        if not isinstance(fn, Fn):
+            raise ValueError(
+                f"{fn_ref} is not a function. Remedy: propose against "
+                "a lifted fn hash from the sheet."
+            )
+        parsed = []
+        for text in clauses:
+            p = Parser(tokenize(text))
+            parsed.append(_VC(expr=p.expr()))
+        goal = Goal(
+            name=fn.name,
+            intent=intent,
+            inputs=[_Param(name=p.name) for p in fn.params],
+            verify=parsed,
+        )
+        goal_hash = self.store.put(goal)
+        self.store.register_goal(goal_hash, None, fn.name, extra={"tier": 3, "impl": full})
+        self.sheet_log.append(f"{self._disp(goal_hash)} goal {fn.name} proposed (tier 3)")
+        result: dict = {"goal_hash": goal_hash, "display": self._disp(goal_hash)}
+        if inputs is None and goal.inputs:
+            result["verify"] = "provisional: inputs required to validate"
+            return result
+        if not isinstance(fn.body, HostBlock) or fn.body.lang not in ("python",):
+            result["verify"] = "provisional: validation supports python-lifted fns in v2.0"
+            return result
+        py_src = ir_source(fn.body.data)
+        verdict = run_verify_py(self.store, py_src, fn.name, goal, inputs)
+        result["verify"] = verdict.to_dict()
+        return result
 
     # ---- verify ------------------------------------------------------------------------
     def verify(self, ref: str, inputs: dict | None = None, timeout: float = 10.0) -> dict:

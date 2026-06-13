@@ -29,10 +29,10 @@ export const Results: React.FC = () => (
     <div style={{zIndex: 1}}>
       <FadeUp><Label color={C.violet}>measured, not estimated</Label></FadeUp>
       <FadeUp delay={8} style={{marginTop: 14, marginBottom: 46}}>
-        <Big>v1.0.1 — every number below is from the actual build</Big>
+        <Big>v2.0.0 — every number below is from the actual build</Big>
       </FadeUp>
       <div style={{display: 'flex', gap: 24}}>
-        <Stat delay={20} value={<Counter to={136} start={25} />} label="tests green · 92% coverage on core / lift / transpile" />
+        <Stat delay={20} value={<Counter to={178} start={25} />} label="tests green · 92% coverage on core / lift / transpile" />
         <Stat delay={35} value={<><Counter to={5.9} start={40} decimals={1} />×</>} label="measured context reduction — requests 2.34.2, real BPE tokenizer" />
         <Stat delay={50} value={<Counter to={0} start={55} />} label="effect under-reports across 33 hand-labeled fixtures" />
         <Stat delay={65} value="<50ms" label="verify cache hit on unchanged code — verdicts keyed by hash, forever" />

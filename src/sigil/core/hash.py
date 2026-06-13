@@ -16,7 +16,7 @@ from typing import Any
 import cbor2
 
 from sigil.core.ast import Node, to_data
-from sigil.core.pycanon import canonical_fn
+from sigil.core.ir import lower_fn
 
 SHORT_LEN = 4
 ESCALATED_LEN = 8
@@ -44,7 +44,7 @@ def fn_digest(source: str) -> str:
     tree = pyast.parse(source)
     for stmt in pyast.walk(tree):
         if isinstance(stmt, (pyast.FunctionDef, pyast.AsyncFunctionDef)):
-            return digest_data(canonical_fn(stmt))
+            return digest_data(lower_fn(stmt))
     raise ValueError(
         "No function definition found in source. Remedy: pass source containing at least one 'def'."
     )

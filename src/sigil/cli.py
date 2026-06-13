@@ -23,7 +23,8 @@ def _iter_py_files(path: Path) -> list[Path]:
         return [path]
     return sorted(
         p
-        for p in path.rglob("*.py")
+        for ext in ("*.py", "*.R", "*.r")
+        for p in path.rglob(ext)
         if not any(part.startswith(".") or part == "__pycache__" for part in p.parts)
     )
 
@@ -52,7 +53,12 @@ def cmd_lift(args: argparse.Namespace) -> int:
     docs, sheets, skipped = [], [], []
     for f in files:
         try:
-            result = lift_source(f.read_text(encoding="utf-8", errors="replace"), name=f.stem)
+            if f.suffix.lower() == ".r":
+                from sigil.lift.r import lift_r_source
+
+                result = lift_r_source(f.read_text(encoding="utf-8", errors="replace"), name=f.stem)
+            else:
+                result = lift_source(f.read_text(encoding="utf-8", errors="replace"), name=f.stem)
         except ValueError as exc:
             skipped.append({"path": str(f), "error": str(exc)})
             continue
@@ -196,6 +202,88 @@ def cmd_verify(args: argparse.Namespace) -> int:
             print(f"  {verdict.detail}")
         print(f"  goal status: {store.status(verdict.goal_hash)}")
     return 0 if verdict.status == "pass" else 1
+
+
+def cmd_check_r(args: argparse.Namespace) -> int:
+    """R reproducibility: analyze(seed=42) must hash identically, forever."""
+    from sigil.lift.rcheck import result_hash
+
+    try:
+        h = result_hash(args.script, args.fn, json.loads(args.args or "[]"), timeout=args.timeout)
+    except (ValueError, subprocess_timeout()) as exc:
+        print(f"sigil check-r: {exc}", file=sys.stderr)
+        return 2
+    print(h)
+    if args.expect:
+        if h == args.expect.lstrip("#"):
+            print("reproducible: hash matches")
+            return 0
+        print(f"NOT reproducible: expected {args.expect}", file=sys.stderr)
+        return 1
+    return 0
+
+
+def subprocess_timeout():
+    import subprocess as sp
+
+    return sp.TimeoutExpired
+
+
+def cmd_migrate(args: argparse.Namespace) -> int:
+    """Store v1 -> v2 (D-036): legacy objects stay readable; new lifts are IR.
+    Reports which impls predate the IR so you can re-lift at leisure."""
+    from sigil.core.ast import Fn, HostBlock
+    from sigil.core.ir import is_ir
+    from sigil.store.repo import Store
+
+    try:
+        store = Store.open(Path(args.store))
+    except ValueError as exc:
+        print(f"sigil migrate: {exc}", file=sys.stderr)
+        return 2
+    legacy = []
+    for obj in store.objects.glob("*.cbor"):
+        try:
+            node = store.get(obj.stem)
+        except Exception:  # noqa: BLE001 — survey must not die on one object
+            continue
+        if (
+            isinstance(node, Fn)
+            and isinstance(node.body, HostBlock)
+            and node.body.lang == "python"
+            and not is_ir(node.body.data)
+        ):
+            legacy.append(f"{store.display(obj.stem)} {node.name}")
+    cfg = json.loads(store._config_path.read_text())
+    cfg["format"] = 2
+    store._config_path.write_text(json.dumps(cfg))
+    print(f"store format -> 2; {len(legacy)} legacy (pre-IR) lifted objects remain readable:")
+    for line in legacy:
+        print(f"  {line}")
+    print("Remedy when convenient: re-lift their sources; old hashes stay resolvable.")
+    return 0
+
+
+def cmd_from_pytest(args: argparse.Namespace) -> int:
+    """Tier-3 bridge: parametrize tables -> REVIEWABLE goal drafts (never
+    auto-registered)."""
+    from sigil.lift.pytest_bridge import extract_drafts
+
+    out = Path(args.out)
+    out.mkdir(parents=True, exist_ok=True)
+    total = 0
+    for f in Path(args.path).rglob("test_*.py"):
+        try:
+            drafts = extract_drafts(f.read_text(encoding="utf-8"), name=f.name)
+        except SyntaxError:
+            continue
+        for d in drafts:
+            (out / f"{d['fn']}.sg.draft").write_text(d["sg"])
+            (out / f"{d['fn']}.inputs.json").write_text(json.dumps(d["inputs"], indent=2))
+            (out / f"{d['fn']}.cases.json").write_text(json.dumps(d["cases"], indent=2))
+            total += 1
+    print(f"from-pytest: {total} draft goal(s) in {out} — review, rename to .sg, build.")
+    return 0 if total else 1
 
 
 def cmd_check(args: argparse.Namespace) -> int:
@@ -382,6 +470,20 @@ def main(argv: list[str] | None = None) -> int:
     p_verify.add_argument("--gen", type=int, help="property mode: N generated input cases")
     p_verify.add_argument("--json", action="store_true", help="machine-readable output")
 
+    p_checkr = sub.add_parser("check-r", help="R reproducibility: result hash of fn(args)")
+    p_checkr.add_argument("script", help=".R file")
+    p_checkr.add_argument("--fn", required=True)
+    p_checkr.add_argument("--args", help='JSON list, e.g. "[42]"')
+    p_checkr.add_argument("--expect", help="expected hash (fails if different)")
+    p_checkr.add_argument("--timeout", type=float, default=30.0)
+
+    p_migrate = sub.add_parser("migrate", help="store v1 -> v2 (IR); legacy stays readable")
+    p_migrate.add_argument("store", nargs="?", default=".")
+
+    p_bridge = sub.add_parser("from-pytest", help="parametrize tables -> reviewable goal drafts")
+    p_bridge.add_argument("path", help="tests directory")
+    p_bridge.add_argument("--out", default="goals-proposed")
+
     p_check = sub.add_parser("check", help="CI gate: rebuild + re-verify every contract")
     p_check.add_argument("paths", nargs="*", help="project paths (default .)")
     p_check.add_argument("--against", help="git ref: also fail on dropped contracts")
@@ -422,6 +524,12 @@ def main(argv: list[str] | None = None) -> int:
         return cmd_verify(args)
     if args.command == "check":
         return cmd_check(args)
+    if args.command == "check-r":
+        return cmd_check_r(args)
+    if args.command == "migrate":
+        return cmd_migrate(args)
+    if args.command == "from-pytest":
+        return cmd_from_pytest(args)
     if args.command == "watch":
         return cmd_watch(args)
     if args.command == "unbind":

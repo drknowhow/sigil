@@ -56,7 +56,7 @@ def test_n3_expand_canonical_form_shows_patchable_paths(tmp_path) -> None:
     source_form = h.expand(fn_hash)
     assert "return n / 2" in source_form  # default: readable source
     canon = h.expand(fn_hash, form="canonical")
-    assert '"body"' in canon and "FunctionDef" in canon  # patch-path schema visible
+    assert '"body"' in canon and '"def"' in canon  # IR patch-path schema visible
 
 
 def test_n5_sigil_scaffolding_filtered_from_sheets() -> None:

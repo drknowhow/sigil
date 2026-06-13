@@ -1,5 +1,8 @@
 # Roadmap — post-1.0 (triaged from firstuse/UPGRADE_PROPOSALS.md)
 
+**Status 2026-06-12: items 1–11 SHIPPED (v1.1.0, v1.2.0, v2.0.0 — see CHANGELOG).
+Remaining: JVM/JS frontends (v3, per the proposal's own ordering).**
+
 Disposition argument: firstuse/PROPOSALS_RESPONSE.md. Ordering rule inherited
 from the v1 plan: depth before width; never cut tests; the harness stays the
 product.

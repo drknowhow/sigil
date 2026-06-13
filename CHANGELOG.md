@@ -1,5 +1,26 @@
 # Changelog
 
+## v2.0.0 — 2026-06-12 (width: roadmap-next wave 3 — Sigil as substrate)
+
+- **Language-neutral IR (S1)** — lifted code now hashes to a tagged neutral IR
+  instead of Python-AST tuples; patch paths and expand operate on it; exotic
+  constructs host-wrap honestly instead of crashing. The one-way door, softened:
+  pre-IR store objects remain readable forever; `sigil migrate` surveys a store
+  and bumps its format (D-036). Lifted digests changed once; goldens regenerated.
+- **R frontend (S2)** — `sigil lift script.R`: tokenizer-canonical Tier-1
+  hashing (comments/whitespace never move a hash) + token-rule effect rows;
+  `library()`/`source()`/`do.call` earn `!unsafe?` early and often, as promised.
+  `sigil check-r --fn analyze --args "[42]" --expect #hash`: result-hash
+  reproducibility contracts (needs Rscript; lifting doesn't).
+- **Multi-fn invariants (P3.9)** — `invariant round_trip { over: enc, dec
+  verify: dec(enc(x)) == x }`; patching either fn re-verifies automatically;
+  passing binds the invariant to all impl hashes.
+- **Tier-3 propose/validate** — `propose_contract` MCP tool: the connected
+  agent IS the proposer; proposals register provisional and can only bind by
+  passing verification. `sigil from-pytest` extracts parametrize tables into
+  reviewable goal DRAFTS (never auto-registered).
+- JVM/JS frontends deferred to v3 per the proposal's own ordering.
+
 ## v1.2.0 — 2026-06-12 (close the loop: roadmap-next wave 2)
 
 - **Recorded inputs** (prerequisite, D-020 revisited): goals carry

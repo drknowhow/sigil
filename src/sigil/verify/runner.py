@@ -46,7 +46,7 @@ class Verdict:
         }
 
 
-def _harness(goal: Goal, fn_name: str, cases: list[dict]) -> str:
+def _harness(goal: Goal, fn_name: str | None, cases: list[dict]) -> str:
     """Per-clause evaluation code appended to the module: every clause is
     evaluated for every input case, in ONE subprocess (v1.2)."""
     lines = [
@@ -55,11 +55,17 @@ def _harness(goal: Goal, fn_name: str, cases: list[dict]) -> str:
         f"__cases = __json.loads({json.dumps(json.dumps(cases))})",
         "__results = []",
         "for __i, __inputs in enumerate(__cases):",
-        "    try:",
-        f"        __out = {fn_name}(**__inputs)",
-        "    except Exception as __e:",
-        "        __results.append([__i, '<call>', False, repr(__e)[:300]])",
-        "        continue",
+        *(
+            [
+                "    try:",
+                f"        __out = {fn_name}(**__inputs)",
+                "    except Exception as __e:",
+                "        __results.append([__i, '<call>', False, repr(__e)[:300]])",
+                "        continue",
+            ]
+            if fn_name
+            else ["    __out = None"]
+        ),
     ]
     for v in goal.verify:
         text, py = sigil_text(v.expr), texpr(v.expr)
@@ -250,3 +256,57 @@ def run_verify_many(
     rows = json.loads(line[len(SENTINEL) :])
     failures = [(i, text, detail) for i, text, ok, detail in rows if not ok]
     return {"status": "fail" if failures else "pass", "failures": failures, "cases": len(cases)}
+
+
+def run_verify_invariant(
+    store, module, inv_name: str, inputs: dict | None, timeout: float = DEFAULT_TIMEOUT
+) -> dict:
+    """Verify a multi-fn invariant (v2.0): clauses call the implicated
+    functions directly; passing binds the invariant to ALL their impl hashes."""
+    from sigil.core.ast import Fn as _Fn
+    from sigil.core.ast import Goal as _Goal
+    from sigil.core.ast import Invariant as _Inv
+
+    inv = next((d for d in module.defs if isinstance(d, _Inv) and d.name == inv_name), None)
+    if inv is None:
+        raise ValueError(f"Invariant {inv_name!r} not found. Remedy: check the name.")
+    fns = {d.name: d for d in module.defs if isinstance(d, _Fn)}
+    missing = [n for n in inv.over if n not in fns]
+    if missing:
+        raise ValueError(
+            f"Invariant {inv_name!r} ranges over undefined fns: {', '.join(missing)}. "
+            "Remedy: define them in the module."
+        )
+    inv_hash = digest_node(inv)
+    if inputs is None:
+        inputs = store.recorded_inputs(inv_hash)
+    if inputs is None and inv.inputs:
+        raise ValueError(
+            f'Invariant {inv_name!r} needs inputs. Remedy: pass inputs= or add inputs: "file.json".'
+        )
+    shim = _Goal(name=inv.name, inputs=inv.inputs, verify=inv.verify)
+    py_src = transpile_module(module).python_src
+    script = py_src + _harness(shim, None, [inputs or {}])
+    try:
+        proc = subprocess.run(
+            [sys.executable, "-c", script],
+            capture_output=True,
+            text=True,
+            timeout=timeout,
+            stdin=subprocess.DEVNULL,
+        )
+    except subprocess.TimeoutExpired:
+        return {"name": inv_name, "status": "timeout", "clauses": []}
+    line = next((ln for ln in proc.stdout.splitlines() if ln.startswith(SENTINEL)), None)
+    if proc.returncode != 0 or line is None:
+        tail = (proc.stderr or proc.stdout).strip().splitlines()[-3:]
+        return {"name": inv_name, "status": "error", "clauses": [], "detail": "; ".join(tail)}
+    rows = json.loads(line[len(SENTINEL) :])
+    clauses = [(text, ok, detail) for _i, text, ok, detail in rows]
+    status = "pass" if all(ok for _, ok, _ in clauses) else "fail"
+    if status == "pass":
+        impls = {n: digest_node(fns[n]) for n in inv.over}
+        index = store._read_index()
+        index.setdefault("invariant_bindings", {})[inv_hash] = {"impls": impls}
+        store._write_index(index)
+    return {"name": inv_name, "status": status, "clauses": clauses, "invariant_hash": inv_hash}

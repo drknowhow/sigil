@@ -6,8 +6,10 @@ Claude Code: `claude mcp add sigil -- sigil serve --root /path/to/repo`.
 Cowork/Claude Desktop: add a custom MCP server with command `sigil`, args
 `serve --root /path/to/repo`.
 
-Tools: `lift(path)`, `sheet()`, `expand(hash, form?)`,
-`patch(hash, ops, inputs?)`, `verify(goal, inputs?)`, `load_module(source)`,
+Tools: `lift(path)` (.py and .R), `sheet()`, `expand(hash, form?)`,
+`patch(hash, ops, inputs?)`, `patch_snippet(hash, snippet, inputs?)`,
+`verify(goal, inputs?)`, `verify_invariant(hash, inputs?)`,
+`load_module(source)`, `propose_contract(fn_hash, clauses, inputs?)` (Tier 3),
 `session_close()`. A session over an existing store starts with its registered
 goals already on the sheet; `load_module` creates goals over pure MCP
 (D-030). `expand(hash, form="canonical")` returns the patchable data form —

@@ -51,5 +51,22 @@ empty Map (D-012). Comprehension: `[x * 2 | x <- xs, x > 0]`. Glyphs `∧ ∨ ¬
 have ASCII aliases `and or not <= >= !=` — the printer emits glyphs.
 Idioms: `.len`, `.set`, `.keys`, `Set.insert` (D-017). Comments: `-- ...`.
 
+## Invariants (v2.0)
+
+```sigil
+invariant round_trip {
+  in: x Int
+  over: enc, dec
+  verify:
+    dec(enc(x)) == x
+}
+```
+
+A property over multiple functions: patching ANY fn in `over:` re-verifies it;
+passing binds the invariant to all their impl hashes.
+
 The binding between a goal and its implementation lives in the `.sigil` store,
-created by verification — never asserted by hand.
+created by verification — never asserted by hand. Module-wide budgets
+(`fx:` after the module header, or `__sigil_fx__ = "!fs.read"` in Python)
+constrain every fn at once; effect modes (`!fs.read` / `!fs.write`, `!db`)
+make budgets precise.

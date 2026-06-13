@@ -106,6 +106,25 @@ def create_server(root: str = "."):
             return _err(exc)
 
     @mcp.tool()
+    def propose_contract(fn_hash: str, clauses: list[str], inputs: dict | None = None) -> dict:
+        """Tier 3: propose verify clauses for a lifted fn. Registers a
+        PROVISIONAL goal and validates immediately when inputs allow — a
+        proposal can only bind by passing verification, never by assertion."""
+        try:
+            return h.propose_contract(fn_hash, clauses, inputs=inputs)
+        except ValueError as exc:
+            return _err(exc)
+
+    @mcp.tool()
+    def verify_invariant(invariant: str, inputs: dict | None = None) -> dict:
+        """Verify a multi-fn invariant by hash. Patching any fn it ranges
+        over re-verifies it automatically; this is the manual trigger."""
+        try:
+            return h.verify_invariant(invariant, inputs=inputs)
+        except ValueError as exc:
+            return _err(exc)
+
+    @mcp.tool()
     def session_close() -> dict:
         """End-of-session stats plus a compacted sheet for the NEXT session
         (compaction never happens mid-session — R1)."""

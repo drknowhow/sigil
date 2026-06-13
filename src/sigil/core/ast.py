@@ -110,6 +110,18 @@ class Goal(Node):
 
 
 @dataclass(frozen=True)
+class Invariant(Node):
+    """A property over MULTIPLE functions (v2.0, P3.9): patching any fn in
+    ``over`` re-verifies it. E.g. forall x: dec(enc(x)) == x."""
+
+    name: str
+    over: list[str] = field(default_factory=list)
+    inputs: list[Param] = field(default_factory=list)
+    verify: list[VerifyClause] = field(default_factory=list)
+    inputs_ref: str | None = None
+
+
+@dataclass(frozen=True)
 class Field(Node):
     name: str
     ty: TypeExpr | None = None
@@ -166,6 +178,7 @@ _NODE_KINDS: dict[str, type[Node]] = {
         HostBlock,
         Fn,
         Goal,
+        Invariant,
         Field,
         Record,
         Import,

@@ -1,5 +1,20 @@
 # STATUS
 
+## Session 2026-06-12 (v2.0.0 — roadmap-next complete)
+
+- **Waves 1–3 shipped autonomously**: v1.1.0 (effect modes + module budgets,
+  @sigil.bind, patch-by-snippet, unbind/diff), v1.2.0 (recorded inputs +
+  inputs-aware verdict cache, sigil check CI gate, sigil watch, property
+  generation with permanent counterexamples), v2.0.0 (language-neutral IR with
+  readable legacy + sigil migrate, R frontend + check-r reproducibility,
+  multi-fn invariants with patch-triggered re-verification, Tier-3
+  propose/validate + pytest draft bridge).
+- **Suite:** 178 passed + 1 skip (Rscript absent in sandbox); ruff clean;
+  every wave committed green and tagged (v1.1.0, v1.2.0, v2.0.0).
+- **Decisions D-034…D-038**; roadmap-next items 1–11 shipped; JVM/JS = v3.
+- **Push pending from a credentialed machine:** `git push origin main --tags`.
+
+
 ## Session 2026-06-12 (roadmap triage)
 
 - **UPGRADE_PROPOSALS.md received** from the first user (firstuse/) — strategic

@@ -85,6 +85,9 @@ class Parser(ExprParserMixin):
             elif self.at("KW", "fn"):
                 defs.append(self.fn())
                 self.skip_nl()
+            elif self.at("KW", "invariant"):
+                defs.append(self.invariant())
+                self.skip_nl()
             else:
                 t = self.peek()
                 raise SigilSyntaxError(
@@ -138,6 +141,45 @@ class Parser(ExprParserMixin):
             ack=ack,
             inputs_ref=inputs_ref,
         )
+
+    def invariant(self):
+        from sigil.core.ast import Invariant
+
+        self.expect("KW", "invariant")
+        name = self.expect("NAME").val
+        self.expect("OP", "{")
+        self.skip_nl()
+        inputs: list[Param] = []
+        over: list[str] = []
+        verify: list[VerifyClause] = []
+        inputs_ref = None
+        while not self.at("OP", "}"):
+            f = self.expect("FIELD", what="invariant field (in/over/inputs/verify)")
+            self.skip_nl()
+            if f.val == "in":
+                inputs = self.params()
+            elif f.val == "over":
+                over = [self.expect("NAME").val]
+                while self.at("OP", ","):
+                    self.next()
+                    over.append(self.expect("NAME").val)
+            elif f.val == "inputs":
+                inputs_ref = self.expect("STRING").val
+            elif f.val == "verify":
+                while not self.at("FIELD") and not self.at("OP", "}"):
+                    verify.append(VerifyClause(expr=self.expr()))
+                    self.skip_nl()
+            else:
+                t = self.peek()
+                raise SigilSyntaxError(
+                    f"field {f.val!r} is not valid in an invariant",
+                    t.line,
+                    t.col,
+                    "invariants take in:, over:, inputs:, verify:",
+                )
+            self.skip_nl()
+        self.expect("OP", "}")
+        return Invariant(name=name, over=over, inputs=inputs, verify=verify, inputs_ref=inputs_ref)
 
     def fn(self) -> Fn:
         self.expect("KW", "fn")

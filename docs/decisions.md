@@ -201,3 +201,22 @@ committed verdict (forgeability). Property generation is stdlib-seeded (not hypo
 for runtime-dependency-free determinism; generators exist only for fully-typed goals.
 Crash-in-impl became structured per-case 'fail' (was whole-run 'error'); isolation
 unchanged.
+
+
+**D-036** (2026-06-12) — **The IR one-way door, softened.** New lifts hash to the
+language-neutral IR; v1 (pycanon-shaped) store objects stay readable forever via the
+legacy path in ir_source, so `sigil migrate` is a survey + format bump, not a breaking
+rewrite. Python signatures stay host-wrapped inside `["def", …, ["pyargs", …]]` —
+argument-shape neutrality wasn't worth lying about Python's calling conventions; R uses
+its own `["rargs", names]`. Sheet digests for lifted code changed once (goldens regen).
+
+**D-037** (2026-06-12) — **R Tier-1 is token-canonical, not AST-canonical.** A real R
+parser (NSE, promises) is not v2.0 scope; normalized token sequences give honest
+content-addressing and survive comments/whitespace. Effect rows are token-rule based and
+deliberately noisy with !unsafe? (library/source/do.call/eval). The reproducibility
+wedge — `analyze(seed=42) ≡ #hash` — runs through Rscript with deparse-stable hashing.
+
+**D-038** (2026-06-12) — **Tier 3 ships as propose/validate, not an embedded LLM.** The
+connected agent is the proposer; the harness enforces the trust tier mechanically:
+proposals register provisional, bind only by passing verification. The pytest bridge
+emits reviewable drafts (never auto-registered) — parametrize tables only, by design.
