@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "sigil-lang"  # PyPI name "sigil" is taken (firstuse N4, D-032); import + CLI stay `sigil`
-version = "2.0.2"
+version = "2.0.3"
 description = "Contract-first, content-addressed language + toolchain for human-AI coding"
 readme = "README.md"
 requires-python = ">=3.11"

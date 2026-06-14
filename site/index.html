@@ -176,7 +176,7 @@
 
 <div id="view-home">
 <header>
-  <div class="tag">v2.0.2 · python + R · invariants · 191 tests · field-tested on Windows &amp; live MCP</div>
+  <div class="tag">v2.0.3 · python + R · invariants · 194 tests · field-tested on Windows &amp; live MCP</div>
   <h1>SIGIL</h1>
   <p class="sub">A <b>contract-first</b>, <b>content-addressed</b> language and toolchain for
   human&thinsp;↔&thinsp;AI coding. Intent is code. Effects are visible. Edits are patches.
@@ -313,9 +313,9 @@
         <div class="vscene" data-dur="300">
           <div class="vglow1"></div>
           <div class="vt vlabel" data-at="2" style="color:var(--violet)">measured, not estimated</div>
-          <div class="vt vbig" data-at="10" style="margin:8px 0 26px">v2.0.2 — every number is from the actual build</div>
+          <div class="vt vbig" data-at="10" style="margin:8px 0 26px">v2.0.3 — every number is from the actual build</div>
           <div class="vrow">
-            <div class="vcard vt" data-at="22"><div class="vstat"><span data-count data-from="0" data-to="191" data-start="26" data-cdur="40"></span></div><div class="vdim" style="font-size:15px">tests green · 92% core coverage</div></div>
+            <div class="vcard vt" data-at="22"><div class="vstat"><span data-count data-from="0" data-to="194" data-start="26" data-cdur="40"></span></div><div class="vdim" style="font-size:15px">tests green · 92% core coverage</div></div>
             <div class="vcard vt" data-at="36"><div class="vstat"><span data-count data-from="0" data-to="6.0" data-start="40" data-cdur="40" data-dec="1"></span>×</div><div class="vdim" style="font-size:15px">measured context reduction</div></div>
             <div class="vcard vt" data-at="50"><div class="vstat"><span data-count data-from="9" data-to="0" data-start="54" data-cdur="30"></span></div><div class="vdim" style="font-size:15px">effect under-reports / 35 fixtures</div></div>
             <div class="vcard vt" data-at="64"><div class="vstat">~0.15ms</div><div class="vdim" style="font-size:15px">cached verify hit (78× vs cold)</div></div>
@@ -385,7 +385,9 @@
   <div class="grid g3">
     <div class="card"><h3><span class="ic">#</span>Content-addressed identity</h3>
       <p>Every definition is named by the sha256 of its canonical AST. Reformatting, comments,
-      docstrings — hash unchanged (proven by property tests, 200 random mutations a run).
+      docstrings — hash unchanged (proven by property tests, 200 random mutations a run); but they
+      aren't discarded — the original source is kept verbatim and returned by <code>expand</code>,
+      so an agent reads the author's actual docstring, not a re-print (v2.0.3).
       Any semantic change — hash moves. <em>"Did the AI change the logic?"</em> is a string compare.</p></div>
     <div class="card"><h3><span class="ic">!</span>Effects are typed</h3>
       <p>Every function carries its effect row: <code>!net !fs !rand !clock !env</code>… A goal's
@@ -442,7 +444,7 @@ patch <span class="h">#6e01</span> { body.stmts.0.value.right.val := <span class
 </section>
 
 <section id="results">
-  <h2>Measured results — benchmarked on v2.0.2</h2>
+  <h2>Measured results — benchmarked on v2.0.3</h2>
   <p class="lede">Real production BPE tokenizer, real artifacts, reproducible via
   <code>scripts/benchmark.py</code> (full report in <code>docs/benchmarks.md</code>). Where
   measurement contradicted the spec's estimates, the measured number won.</p>
@@ -573,7 +575,7 @@ patch <span class="h">#6e01</span> { body.stmts.0.value.right.val := <span class
   heavily dynamic Python and R earn <code>!unsafe?</code> rather than answers; R Tier-1 is token-canonical, not a full
   parser; lifting is one-directional; verify network-blocking is best-effort; JVM/JS frontends are v3. CI runs on Linux 3.11–3.13 + Windows.</p>
   <p style="margin-top:14px">Get started: <code>pip install -e ".[dev,harness]"</code> → <code>sigil lift your/code</code> →
-  <code>sigil serve --root .</code> · docs/quickstart.md · Sigil v2.0.2, 2026</p>
+  <code>sigil serve --root .</code> · docs/quickstart.md · Sigil v2.0.3, 2026</p>
 </footer>
 </div><!-- /view-home -->
 
@@ -586,7 +588,7 @@ patch <span class="h">#6e01</span> { body.stmts.0.value.right.val := <span class
     <p class="gh4">1 · Setup</p>
     <div class="step"><span class="sn">1.1</span><div>Requirements: <b>Python 3.11+</b> and pip. From the <code>sigil-build/</code> repo root:</div></div>
     <div class="term copy"><button class="cp">copy</button><pre>pip install -e ".[dev,harness]"   <span class="c"># core + tests + MCP server</span>
-sigil --version                    <span class="c"># sigil 2.0.2</span></pre></div>
+sigil --version                    <span class="c"># sigil 2.0.3</span></pre></div>
     <p class="note">Core installs are lean: stdlib + <code>cbor2</code>. The <code>[harness]</code> extra adds the
     <code>mcp</code> package for <kbd>sigil serve</kbd>; <code>[dev]</code> adds pytest/hypothesis/ruff.</p>
   </section>
@@ -740,8 +742,24 @@ patch(<span class="h">#6e01</span>, [{"path": "body.stmts.0.value.right.val", "o
 <div id="view-change" hidden>
   <h2 class="gtitle" style="margin-bottom:8px">Changelog</h2>
   <p class="lede">Six releases, every one shipped with the suite green and tagged in git
-  (<code>v1.0.0 → v2.0.2</code>). Newest first.</p>
+  (<code>v1.0.0 → v2.0.3</code>). Newest first.</p>
   <div class="clog">
+
+    <div class="rel">
+      <div class="ver">v<b>2.0.3</b><span class="when">2026-06-14 · Muninn review: text fidelity + framing</span></div>
+      <div class="tagline">Read the author's actual words; name the real token lever.</div>
+      <ul>
+        <li><b>Fixed: <code>expand</code> returned a de-commented projection</b> — it dropped the
+        docstring and every comment. Now the store keeps the original source (keyed by the node's
+        hash, never hashed, so identity is unchanged) and <code>expand</code> returns it verbatim
+        for lifted, unedited functions; a patched-only AST returns a clearly-labeled projection.</li>
+        <li><b>Changed: the printer emits ASCII operators</b> (<code>and &lt;= !=</code>) by default;
+        glyphs (<code>∧ ≤ ≠</code>) are opt-in — they cost an extra BPE token each. No hashes change.</li>
+        <li><b>Relabeled the token story</b>: the win is content addressing (a byte-stable,
+        prompt-cacheable index) + small patch deltas — not "compression via a terser language." The
+        contracts and effects deliberately <em>add</em> information.</li>
+      </ul>
+    </div>
 
     <div class="rel">
       <div class="ver">v<b>2.0.2</b><span class="when">2026-06-13 · Tier-3 validation hardened</span></div>
@@ -901,6 +919,7 @@ patch(<span class="h">#6e01</span>, [{"path": "body.stmts.0.value.right.val", "o
     {label:'v2.0', value:35, disp:'35'},
     {label:'v2.0.1', value:35, disp:'35'},
     {label:'v2.0.2', value:35, disp:'35'},
+    {label:'v2.0.3', value:35, disp:'35'},
   ], {color:C.violet, max:42}));
   set('chart-tests', vtrend([
     {label:'v1.0.0', value:130, disp:'130'},
@@ -910,6 +929,7 @@ patch(<span class="h">#6e01</span>, [{"path": "body.stmts.0.value.right.val", "o
     {label:'v2.0.0', value:178, disp:'178'},
     {label:'v2.0.1', value:185, disp:'185'},
     {label:'v2.0.2', value:191, disp:'191'},
+    {label:'v2.0.3', value:194, disp:'194'},
   ], {color:C.cyan, max:215}));
   set('chart-v2', hbars([
     {label:'IR round-trip', frac:1.0,  color:C.cyan,   disp:'100% stable (19/19)'},

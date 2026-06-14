@@ -1,4 +1,19 @@
-# Benchmarks — Sigil v2.0.2
+# Benchmarks — Sigil v2.0.3
+
+> **v2.0.3 (Muninn review) — no movement on the headline numbers, by design.**
+> The Part 1 fix (original-source sidecar) and Part 2 change (ASCII-default
+> printer) do not touch digest-sheet rendering: the `requests` snapshot sheets
+> are **byte-identical** before and after (md5 unchanged), so the context-
+> reduction table below stands as measured. Regression check on the
+> tokenizer-free benches passed: effect inference 0 under-reports / 35 fixtures,
+> IR round-trip 19/19 hash-stable, verify-cache hit ~56× vs cold, Tier-3
+> exploit still closed. The ASCII-default printer makes Sigil's *printed* form
+> cheaper (each glyph operator was 2 BPE tokens, ASCII is 1), but operators are
+> sparse — across the four example `.sg` modules there are 3 glyph-operator
+> occurrences total, so the absolute saving is small. That smallness is the
+> point: terseness was never the token lever (see `docs/cost-model.md`). Exact
+> token counts for the glyph table need a real BPE; re-run `scripts/measure_costs.py`
+> on a machine with the bundled Claude BPE or a cached `cl100k` vocabulary.
 
 Every number is produced by `scripts/benchmark.py` from the actual package and
 artifacts in this repo. Token counts use a real production BPE tokenizer (the

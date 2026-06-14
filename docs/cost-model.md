@@ -56,6 +56,51 @@ with `c_cache ≪ c_in < c_out`. R1 maximizes the cached term, R2/R3 shrink the
 output and retry terms — R3 (auto-verify, patch-the-subtree feedback) attacks
 the retry term, which dominates badly-specified sessions.
 
+## What the saving actually is — and isn't (Muninn Part 2)
+
+Three separate claims hide inside "lossless token compression via a terser
+language." Measured, the win comes from none of them — and naming the real
+mechanism makes the pitch *more* defensible, not less.
+
+**A terser language does not save tokens.** The one lever a glyph syntax offers
+— the math operators `∧ ≤ ≠` — actually *costs* tokens: real BPE tokenizers
+split a non-ASCII operator into two tokens where the ASCII spelling is one.
+
+| written as | tokens | written as | tokens |
+|---|---|---|---|
+| `and` | 1 | `∧` | 2 |
+| `<=`  | 1 | `≤` | 2 |
+| `!=`  | 1 | `≠` | 2 |
+
+(This is well-known BPE behavior; re-run `scripts/measure_costs.py` with the
+bundled Claude BPE to pin the exact counts on your tokenizer.) The printer now
+emits ASCII by default for exactly this reason (D-044); glyphs are opt-in. And a
+`.sg` file is *longer* than the equivalent Python — it adds contracts and effect
+rows. The language is not where tokens are saved.
+
+**"Compression" is the wrong word.** A digest-sheet line —
+`#9407 fetch_prices(tickers, start, end) -> ? !net?` — is not a squeezed-down
+function you could rebuild the body from. It is an **index card**: name, args,
+effects, fingerprint. The body is filed away and fetched (`expand`) only when
+needed. The saving is "don't carry what you aren't using this turn" — real and
+valuable, but a different thing from compression.
+
+**The actual lever is content addressing + small deltas.** A function's
+fingerprint moves only when its meaning changes, so the index sheet is
+byte-for-byte identical turn after turn — exactly the precondition for a model's
+**prompt cache** to bill it at cached rates (R1). Edits ship as small structured
+patches, not whole-file rewrites (R2/R3). Stable cacheable index + tiny edits =
+the compounding win measured above. The corollary, said plainly: the
+**contracts and effects** — arguably the most valuable part of Sigil — *add*
+information. The best part of the project compresses nothing, and that is fine.
+
+**The experiment that would settle it.** Take one real agent coding task and run
+it two ways — (a) Sigil's sheet + patch protocol, vs (b) plain Python kept in a
+prompt cache + an ordinary patch tool — and compare the real token bill. If
+Sigil wins, the win is most likely the contracts/effects catching bad edits
+(fewer retries), not terseness or compression. `scripts/benchmark.py` is where
+that A/B belongs.
+
 ## Re-measuring on your own repo
 
 ```bash

@@ -112,7 +112,7 @@ The patch *is* the diff, the review unit, and the merge unit. Output tokens scal
 
 ### 3. Project dictionary (symbol interning)
 
-Each project carries a dictionary mapping its recurring vocabulary — type names, hosts, paths, idioms — to short indices. The projection emits `$12` instead of `Frame{ticker Str, date Date, o,h,l,c F64, v U64}` after first use. Dictionaries are themselves content-addressed, so tools and models share one by hash. In practice this is learned per-codebase compression: the more internally consistent the project, the cheaper it gets.
+Each project carries a dictionary mapping its recurring vocabulary — type names, hosts, paths, idioms — to short indices. The projection emits `$12` instead of `Frame{ticker Str, date Date, o,h,l,c F64, v U64}` after first use. Dictionaries are themselves content-addressed, so tools and models share one by hash. In practice this is learned per-codebase *working-set reduction*: the more internally consistent the project, the cheaper it gets. (Framing caveat, Muninn Part 2: like the digest sheet this reduces what's *carried per turn*, not the size of any single definition — and the contracts/effects deliberately *add* information. The honest token lever is content addressing → stable prompt-cache prefix + small patch deltas; see `docs/cost-model.md` and D-044 for measured numbers.)
 
 ### 4. Goal templates (the stdlib is vocabulary)
 

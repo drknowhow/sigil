@@ -1,5 +1,30 @@
 # STATUS
 
+## Session 2026-06-14 (Muninn review — text-fidelity + framing)
+
+- **Muninn Part 1 (defect, fixed):** `expand(form="source")` returned a de-commented IR
+  projection — docstring and comments unrecoverable. Now the store keeps original source in a
+  sidecar (`.sigil/src/<hash>.txt`, keyed by hash, never hashed); `expand` returns the author's
+  verbatim text for lifted/unedited fns and a labeled canonical projection for patched-only
+  ASTs. Hashing untouched; R2 byte-identical-per-hash preserved. D-043. Gate:
+  `tests/harness/test_expand_source_fidelity.py`.
+- **Muninn Part 2 (framing + ASCII default):** the printer now emits ASCII operators by default
+  (`and <= !=`); glyphs (`∧ ≤ ≠`) opt-in via `glyph_output()` — they cost an extra BPE token
+  each. No hash changes (digests are over CBOR, not text). Relabeled the token story in
+  cost-model.md / README / spec: the lever is content addressing → cached prefix (R1) + small
+  patch deltas (R2/R3), not "compression via a terser language." D-044.
+- **Suite:** 194 passed + 1 skip (was 191 + 1; +3 fidelity tests). Round-trip canonical sources
+  updated to ASCII (D-044, golden-update rationale logged).
+- **Release:** version bumped to **v2.0.3** (pyproject, `__init__`, CLI `--version`, benchmark.py,
+  README, CHANGELOG, hero page). Benchmarks re-run (tokenizer-free benches + sheet md5): no
+  regression (0 effect under-reports, IR round-trip 19/19, verify-cache ~56×, Tier-3 exploit
+  closed), and the `requests` digest sheets are byte-identical before/after — headline reduction
+  numbers stand. Real-BPE token figures (glyph table) still need a credentialed `measure_costs.py`
+  run; the sandbox has no offline tokenizer. Hero page (site/index.html) updated: version, 194
+  tests, expand-returns-original-source, glyph→ASCII, framing; benchmarks.md carries a v2.0.3 note.
+- **Env note:** the sandbox bash mount intermittently corrupted working-tree files during this
+  session; tests were run from a git-archive copy. Canonical (Edit-tool) files verified intact.
+
 ## Session 2026-06-13 (v2.0.2 — Tier-3 validation hardened)
 
 - **Third field report (addendum)**: `propose_contract` let the proposer supply both the

@@ -51,9 +51,12 @@ def create_server(root: str = "."):
 
     @mcp.tool()
     def expand(hash: str, form: str = "source") -> str:
-        """Full projection of one definition by #hash. Byte-identical for the
-        same hash, forever — call this whenever you need to see code again
-        instead of reconstructing it from memory (R2). form='canonical'
+        """Full source of one definition by #hash. For a lifted, unedited fn
+        this is the author's ORIGINAL text — comments and docstring included.
+        A fn that exists only as a patched AST returns a canonical projection,
+        labeled as such ('# projected from canonical form ...'). Byte-identical
+        for the same hash, forever — call this whenever you need to see code
+        again instead of reconstructing it from memory (R2). form='canonical'
         returns the patchable data form — derive patch op paths from it
         instead of guessing."""
         try:

@@ -252,3 +252,34 @@ generation neither false-rejects nor false-verifies. Insufficient applicable cas
 "provisional: insufficient evidence". Evidence (method, case counts, counterexamples) is
 returned and shown on the sheet (`tier-3 verified (N cases)`), so a battle-tested rule is
 distinguishable from a lucky one. A tightening of D-038, not a redesign.
+
+**D-043** (2026-06-14) — **`expand` returns the author's original source, not just the IR
+projection (Muninn Part 1).** `expand(form="source")` rebuilt code from the canonical IR,
+silently dropping the docstring (stripped by `_strip_docstring`) and every comment (gone at
+`ast.parse`). That is "semantically lossless" but not "text-lossless," and for a human↔AI
+tool the docstring is the function's intent in the author's own words — handing an agent the
+de-commented projection tears the reasoning off the code. Fix: the store keeps the original
+bytes in a sidecar (`.sigil/src/<hash>.txt`), keyed by the same full hash and never hashed —
+the same store-side rule bindings already follow (sigil-canonical-hashing skill), so identity
+and digests are untouched. `lift` captures each top-level fn's original span (decorators + the
+comment block directly above + body; `ast.get_source_segment` alone omits the leading
+comment/decorators). `expand` returns that verbatim for lifted, unedited fns; a fn that exists
+only as a patched AST has no record and returns a canonical projection labeled
+`# projected from canonical form -- original comments not preserved`. R2 holds: output is
+byte-identical per hash, and monotonic (projection → source once known, never flipping back).
+Scope: top-level python-lifted fns (the harness already skips methods/records); Sigil-native
+fns keep the lossless printer projection. Gate: `tests/harness/test_expand_source_fidelity.py`.
+
+**D-044** (2026-06-14) — **The printer emits ASCII operators by default; glyphs are opt-in
+(Muninn Part 2).** Reverses the earlier "printer emits glyphs / one true formatting, no
+options" rule (sigil-transpile-verify skill, updated here) on measured evidence: real BPE
+tokenizers split `∧ ≤ ≠` into two tokens where `and <= !=` are one, so the glyph form *raised*
+the very token cost Sigil exists to lower. Printed text never feeds hashing (digests are over
+canonical CBOR, not text), so this changes no hash; the round-trip property holds with ASCII as
+the canonical spelling. Glyphs are still accepted on input forever (lexer) and emittable via
+`printer.glyph_output()`. This also relabels the token story (docs/cost-model.md, README,
+spec): the win is content addressing (byte-stable prompt-cache prefix, R1) + small patch deltas
+(R2/R3), not "lossless compression via a terser language" — the digest sheet is an index card,
+and the contracts/effects deliberately *add* information. Required golden/round-trip update:
+`tests/properties/test_roundtrip.py` canonical sources are now ASCII; this entry is the
+explanation (sigil-quality-gates skill).

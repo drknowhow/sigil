@@ -1,6 +1,6 @@
 """Sigil — contract-first, content-addressed language + toolchain for human-AI coding."""
 
-__version__ = "2.0.2"
+__version__ = "2.0.3"
 
 from sigil._bind import SigilBindError, bind, verify_bound  # noqa: E402
 

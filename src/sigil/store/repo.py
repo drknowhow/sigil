@@ -2,13 +2,15 @@
 
 Layout (all paths relative — the store is relocatable, plan section 10):
   .sigil/objects/<full-hash>.cbor   canonical CBOR of the node's data
+  .sigil/src/<full-hash>.txt        author's original source (Muninn Part 1)
   .sigil/index.json                 goals registry + goal<->impl bindings
   .sigil/config.json                {"short_len": 4|8} (collision escalation, sticky)
   .sigil/vcache/<goal>-<impl>.json  immutable verify verdicts
 
 Identity rules per the sigil-canonical-hashing skill: full sha256 persisted;
 short form display-only; 4 -> 8 char escalation on prefix collision is a
-store-level, sticky setting. Bindings live here, never inside objects.
+store-level, sticky setting. Bindings live here, never inside objects. The
+source sidecar follows the same rule: keyed by the node's hash, never hashed.
 """
 
 from __future__ import annotations
@@ -30,6 +32,7 @@ class Store:
         self.dir = Path(root) / self.DIRNAME
         self.objects = self.dir / "objects"
         self.vcache = self.dir / "vcache"
+        self.src = self.dir / "src"
         self._index_path = self.dir / "index.json"
         self._config_path = self.dir / "config.json"
 
@@ -39,6 +42,7 @@ class Store:
         store = cls(root)
         store.objects.mkdir(parents=True, exist_ok=True)
         store.vcache.mkdir(parents=True, exist_ok=True)
+        store.src.mkdir(parents=True, exist_ok=True)
         if not store._index_path.exists():
             store._write_index({"goals": {}, "bindings": {}})
         if not store._config_path.exists():
@@ -93,6 +97,25 @@ class Store:
                 "Remedy: use more hash characters."
             )
         return matches[0]
+
+    # ---- original source sidecar (Muninn Part 1, D-043) --------------------
+    def put_source(self, full: str, text: str) -> None:
+        """Keep the author's original source for a node, keyed by the same
+        full hash. First write wins: two texts that canonicalize to one hash
+        share one record (content addressing). This is store-side data, never
+        hashed and never inside the object -- the same rule bindings follow
+        (sigil-canonical-hashing skill), so identity and the digest are
+        untouched."""
+        self.src.mkdir(parents=True, exist_ok=True)
+        path = self.src / f"{full}.txt"
+        if not path.exists():
+            path.write_text(text, encoding="utf-8")
+
+    def source(self, full: str) -> str | None:
+        """The author's original source for a node, or None when the node was
+        never lifted from text (e.g. it exists only as a patched AST)."""
+        path = self.src / f"{full}.txt"
+        return path.read_text(encoding="utf-8") if path.exists() else None
 
     # ---- short display with sticky escalation -------------------------------
     @property

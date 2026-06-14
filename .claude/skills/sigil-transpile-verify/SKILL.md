@@ -12,8 +12,8 @@ description: Rules for the Sigil text projection (parser/printer), the Sigil-to-
 3. Transpiler. 4. Verify runner.
 
 ## Projection rules
-- The AST is the source of truth; text is a projection. The printer defines canonical text — one true formatting, no options in v1.0.
-- Glyphs each have exactly one ASCII alias (AND-glyph/and, subseq-glyph/subseq_of, <=, ->). Parser accepts both; printer emits glyphs. The alias table lives in grammar.md.
+- The AST is the source of truth; text is a projection. The printer defines canonical text — one true formatting.
+- Glyphs each have exactly one ASCII alias (AND-glyph/and, subseq-glyph/subseq_of, <=, ->). Parser accepts both; **the printer emits ASCII (canonical)** — glyphs cost an extra BPE token each, so ASCII is cheaper for agents (D-044). Glyphs remain available opt-in via `printer.glyph_output()`. The alias table lives in grammar.md.
 
 ## Transpilation mapping (Sigil -> Python)
 | Sigil | Python |
