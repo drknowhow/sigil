@@ -12,7 +12,7 @@ from hypothesis import strategies as st
 from sigil.core import expr as E
 from sigil.core.ast import Effect, EffectRow, Fn, Import, Module, Param, TypeExpr
 from sigil.lang.parser import parse_module
-from sigil.lang.printer import print_module
+from sigil.lang.printer import glyph_output, print_module
 
 # ---------------------------------------------------------------- canonical
 CANONICAL = [
@@ -41,7 +41,7 @@ goal fetch_prices {
 
 fn dedupe(xs [T]) -> [T]
   pure
-  post |r| r.set == xs.set ∧ r.len ≤ xs.len
+  post |r| r.set == xs.set and r.len <= xs.len
 {
   s := {}
   ret [x | x <- xs, s.insert(x)]
@@ -51,7 +51,7 @@ fn dedupe(xs [T]) -> [T]
 
 fn classify(n Int) -> Str
   pure
-  pre n ≥ 0
+  pre n >= 0
 {
   if n == 0 {
     ret "zero"
@@ -88,12 +88,17 @@ def test_canonical_sources_round_trip_exactly() -> None:
         assert print_module(parse_module(src)) == src
 
 
-def test_ascii_aliases_parse_to_same_ast() -> None:
+def test_ascii_is_canonical_and_glyphs_parse_equal() -> None:
+    # ASCII is the canonical printed form (D-044): each operator is one token,
+    # where the glyph spelling costs two. Glyphs stay accepted on input.
     glyph = "module m\n\nfn f(a Int, b Int) -> Bool\n  pure\n{\n  ret a ≤ b ∧ ¬b ∨ a ≠ b\n}\n"
-    ascii_ = glyph.replace("≤", "<=").replace("∧", "and").replace("¬", "not ")
-    ascii_ = ascii_.replace("≠", "!=").replace("∨", "or")
+    ascii_ = (
+        "module m\n\nfn f(a Int, b Int) -> Bool\n  pure\n{\n  ret a <= b and not b or a != b\n}\n"
+    )
     assert parse_module(glyph) == parse_module(ascii_)
-    assert print_module(parse_module(ascii_)) == glyph  # printer emits glyphs
+    assert print_module(parse_module(glyph)) == ascii_  # printer emits ASCII
+    with glyph_output():
+        assert print_module(parse_module(ascii_)) == glyph  # glyphs remain opt-in
 
 
 # ------------------------------------------------------------- generated ASTs

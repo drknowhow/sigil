@@ -1,5 +1,21 @@
 # Changelog
 
+## v2.0.3 — 2026-06-14 (Muninn review: text fidelity + framing)
+
+- **Fixed: `expand(form="source")` now returns the author's original text** — comments and
+  docstring included — for lifted, unedited functions, instead of a de-commented IR
+  reconstruction (Muninn Part 1). The store keeps original source in a sidecar keyed by the
+  node's hash (never hashed, so identity/digests are unchanged); functions that exist only as a
+  patched AST return a canonical projection clearly labeled as such. D-043.
+- **Changed: the printer emits ASCII operators (`and <= !=`) by default; glyphs (`∧ ≤ ≠`) are
+  opt-in** via `printer.glyph_output()` (Muninn Part 2). Glyphs cost an extra BPE token each, so
+  ASCII is cheaper for agents. No hashes change (digests are over canonical CBOR, not text);
+  glyphs are still accepted on input. D-044.
+- **Docs: relabeled the token-savings story** (cost-model.md, README, spec). The win is content
+  addressing (byte-stable, prompt-cacheable index, R1) + small structured patch deltas (R2/R3) —
+  not "lossless compression via a terser language." The contracts/effects deliberately *add*
+  information; the digest sheet is an index card, not a compressed body.
+
 ## v2.0.2 — 2026-06-13 (Tier-3 proposal validation hardened)
 
 - **Fixed: `propose_contract` no longer lets the proposer grade its own homework**

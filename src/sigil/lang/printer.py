@@ -1,13 +1,34 @@
 """Printer: AST -> canonical Sigil text. The printer DEFINES canonical form —
-one true formatting, no options (sigil-transpile-verify skill). Glyphs are
-emitted; ASCII aliases are parse-only (docs/grammar.md alias table)."""
+one true formatting (sigil-transpile-verify skill). Canonical output is ASCII:
+each operator is a single token, where the glyph spelling (∧ ≤ ≠) costs two
+under real BPE tokenizers (Muninn Part 2 / D-044). Glyphs are still accepted on
+input forever (lexer aliases) and can be emitted opt-in via glyph_output()."""
 
 from __future__ import annotations
+
+import contextlib
 
 from sigil.core import expr as E
 from sigil.core.ast import Contract, EffectRow, Fn, Goal, Invariant, Module, Node, Param, TypeExpr
 
 GLYPH = {"and": "∧", "or": "∨", "<=": "≤", ">=": "≥", "!=": "≠"}
+
+_EMIT_GLYPHS = False
+
+
+@contextlib.contextmanager
+def glyph_output():
+    """Emit glyph operators (∧ ∨ ≤ ≥ ≠ ¬) for the duration of the block. Off by
+    default — ASCII is canonical (D-044). Input always accepts both spellings."""
+    global _EMIT_GLYPHS
+    prev = _EMIT_GLYPHS
+    _EMIT_GLYPHS = True
+    try:
+        yield
+    finally:
+        _EMIT_GLYPHS = prev
+
+
 PREC = {
     "or": 1,
     "and": 2,
@@ -59,7 +80,7 @@ def _expr(e: Node) -> str:
         return f"{pexpr(e.value, 9)}[{pexpr(e.index)}]"
     if isinstance(e, E.EUn):
         if e.op == "not":
-            return f"¬{pexpr(e.value, 3)}"
+            return f"¬{pexpr(e.value, 3)}" if _EMIT_GLYPHS else f"not {pexpr(e.value, 3)}"
         return f"-{pexpr(e.value, 9)}"
     if isinstance(e, E.EBin):
         p = PREC[e.op]
@@ -69,7 +90,7 @@ def _expr(e: Node) -> str:
             lmin, rmin = 8, 7  # right-associative
         else:
             lmin, rmin = p, p + 1
-        op = GLYPH.get(e.op, e.op)
+        op = GLYPH.get(e.op, e.op) if _EMIT_GLYPHS else e.op
         return f"{pexpr(e.left, lmin)} {op} {pexpr(e.right, rmin)}"
     if isinstance(e, E.EList):
         return "[" + ", ".join(pexpr(x) for x in e.items) + "]"

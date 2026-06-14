@@ -206,7 +206,7 @@ def bench_ir_roundtrip() -> dict:
 def main() -> None:
     name, count = get_tokenizer()
     result = {
-        "version": "2.0.2",
+        "version": "2.0.3",
         "tokenizer": name,
         "context_reduction": bench_context_reduction(count),
         "iteration_turn": bench_iteration(count),

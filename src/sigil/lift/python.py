@@ -24,6 +24,7 @@ class SheetEntry:
     sig: str
     effects: str  # display row, e.g. '!fs !net' or 'pure?'
     kind: str  # 'fn' | 'record'
+    source: str | None = None  # original text (comments/docstring), Muninn Part 1
 
 
 @dataclass(frozen=True)
@@ -82,6 +83,27 @@ def est_tokens(text: str) -> int:
     return max(1, len(text) // 4)
 
 
+def _orig_source(lines: list[str], node: ast.stmt) -> str | None:
+    """The author's original text for a top-level def: comments, docstring and
+    formatting included (Muninn Part 1). ast.get_source_segment omits leading
+    decorators and the comment block above the def, so reconstruct the span:
+    from the first decorator (or the def line), extended up over a contiguous
+    run of comment-only lines, through end_lineno. Returns None if positions
+    are unavailable (older AST / synthetic node) — the caller then falls back
+    to the canonical projection."""
+    start = getattr(node, "lineno", None)
+    end = getattr(node, "end_lineno", None)
+    if start is None or end is None:
+        return None
+    for d in getattr(node, "decorator_list", []) or []:
+        if getattr(d, "lineno", start) < start:
+            start = d.lineno
+    # absorb the comment block directly above (no blank-line gap)
+    while start > 1 and lines[start - 2].lstrip().startswith("#"):
+        start -= 1
+    return "\n".join(lines[start - 1 : end])
+
+
 def lift_source(source: str, name: str = "<module>") -> LiftResult:
     try:
         tree = ast.parse(source)
@@ -93,6 +115,7 @@ def lift_source(source: str, name: str = "<module>") -> LiftResult:
 
     rows = infer_module_effects(tree)
     module_fx = _module_fx(tree, name)
+    lines = source.splitlines()
     pure_unknown = EffectRow(effects=[], uncertain=True)
     imports: list[Import] = []
     defs: list = []
@@ -118,6 +141,7 @@ def lift_source(source: str, name: str = "<module>") -> LiftResult:
                     sig=_signature(s),
                     effects=render_row(fx),
                     kind="fn",
+                    source=_orig_source(lines, s),
                 )
             )
         elif isinstance(s, ast.ClassDef):

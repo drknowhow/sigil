@@ -28,19 +28,22 @@ by a standard precedence climber, which preserves the LL(1) property.
 
 ## Glyph / ASCII alias table
 
-Parser accepts both spellings; the printer emits the canonical one.
+Parser accepts both spellings. The printer emits **ASCII** by default — it is
+the canonical form: each operator is a single BPE token, where the glyph
+spelling costs two (Muninn Part 2 / D-044). Glyphs can be emitted opt-in via
+`printer.glyph_output()`.
 
-| Canonical (printed) | ASCII alias | Meaning |
+| Canonical (printed) | Accepted alias | Meaning |
 |---|---|---|
-| `∧` | `and` | logical and |
-| `∨` | `or`  | logical or |
-| `¬` | `not` | logical not |
-| `≤` | `<=`  | less-or-equal |
-| `≥` | `>=`  | greater-or-equal |
-| `≠` | `!=`  | not-equal |
-| `<-` | `<-` (`←` accepted) | iteration binder |
-| `->` | `->` (`→` accepted) | return type arrow |
-| `:=` | `:=` | assignment |
+| `and` | `∧` | logical and |
+| `or`  | `∨` | logical or |
+| `not` | `¬` | logical not |
+| `<=`  | `≤` | less-or-equal |
+| `>=`  | `≥` | greater-or-equal |
+| `!=`  | `≠` | not-equal |
+| `<-`  | `←` | iteration binder |
+| `->`  | `→` | return type arrow |
+| `:=`  | (none) | assignment |
 
 The spec's `⊑` (subsequence) is illustrative, not in the v1.0 core (D-011).
 
@@ -114,7 +117,8 @@ spec's `s := {}` set idiom in `dedupe`.
 - Field order in goals: intent, in, out, fx, law (one per line), ack, verify.
 - One space around binary operators and after commas; no space inside
   brackets/parens; effects separated by single spaces, sorted alphabetically.
-- Glyphs per the alias table; `--` comments are never printed (not in AST).
+- ASCII operators per the alias table (canonical; glyphs opt-in via
+  `glyph_output()`); `--` comments are never printed (not in AST).
 
 ## Reserved words
 

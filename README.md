@@ -1,7 +1,7 @@
 # Sigil
 
 Contract-first, content-addressed language + toolchain for human–AI coding.
-Status: **v2.0.2 — released** (full v1.0.0 → v2.0.2 history in `CHANGELOG.md`).
+Status: **v2.0.3 — released** (full v1.0.0 → v2.0.3 history in `CHANGELOG.md`).
 Build state in `docs/STATUS.md`; spec and plan in `docs/plan/`.
 
 ## Quickstart
@@ -25,10 +25,12 @@ A digest sheet line:
 #f22c fetch_prices(tickers, start, end) -> ? !fs !net
 ```
 
-`#f22c` is a content address (sha256 over canonical CBOR of the AST — formatting,
-comments and docstrings never change it). `!fs !net` is the inferred effect row;
-`?` marks static guesses (`pure?`, `!unsafe?`) — Tier 2 over-approximates, never
-silences uncertainty.
+`#f22c` is a content address (sha256 over canonical CBOR of the AST). Formatting,
+comments and docstrings don't change it — identity is the code's *meaning* — but
+they are not discarded: the original source is kept verbatim and returned by
+`expand`, so an agent reads the author's actual text (docstring and all), not a
+re-print. `!fs !net` is the inferred effect row; `?` marks static guesses
+(`pure?`, `!unsafe?`) — Tier 2 over-approximates, never silences uncertainty.
 
 `sigil serve --root .` runs the MCP harness (stdio): tools `lift`, `sheet`,
 `expand(hash, form?)`, `patch`, `verify`, `load_module`, `session_close` under
@@ -55,4 +57,6 @@ the workflow. Project hero page + quick guide: open `site/index.html`. Explainer
   validates proposals against *generated* inputs, not the proposer's own witness) + the
   `sigil from-pytest` draft bridge.
 
-Benchmarks (token reduction, verify-cache latency, effect accuracy, lift throughput): `docs/benchmarks.md` (v2.0.2; includes Tier-3 proposal-validation), reproducible via `python3 scrip
+Benchmarks (token reduction, verify-cache latency, effect accuracy, lift throughput): `docs/benchmarks.md` (v2.0.2; includes Tier-3 proposal-validation), reproducible via `python3 scripts/benchmark.py`.
+
+See `CHANGELOG.md` for the full v1.0.0 → v2.0.0 history, or open `site/index.html` → Changelog.

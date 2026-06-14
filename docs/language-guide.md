@@ -26,7 +26,7 @@ in v1.0). A goal budgeting `!unsafe` must carry an `ack: "<reason>"`.
 ```sigil
 fn dedupe(xs [Int]) -> [Int]
   pure
-  post |r| r.set == xs.set ∧ r.len ≤ xs.len
+  post |r| r.set == xs.set and r.len <= xs.len
 {
   s := {}
   ret [x | x <- xs, s.insert(x)]
@@ -47,8 +47,9 @@ the call chain: `fetch_prices -> save_cache: open requires !fs; budget allows !n
 ## Pocket reference
 
 Statements end at end-of-line. `:=` assigns. `{}` is the empty Set, `{:}` the
-empty Map (D-012). Comprehension: `[x * 2 | x <- xs, x > 0]`. Glyphs `∧ ∨ ¬ ≤ ≥ ≠`
-have ASCII aliases `and or not <= >= !=` — the printer emits glyphs.
+empty Map (D-012). Comprehension: `[x * 2 | x <- xs, x > 0]`. The printer emits
+ASCII operators `and or not <= >= !=` (canonical — one BPE token each); the
+glyph spellings `∧ ∨ ¬ ≤ ≥ ≠` are accepted on input and available opt-in (D-044).
 Idioms: `.len`, `.set`, `.keys`, `Set.insert` (D-017). Comments: `-- ...`.
 
 ## Invariants (v2.0)

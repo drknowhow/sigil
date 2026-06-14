@@ -55,6 +55,10 @@ class Harness:
                 if node is None or entry.kind != "fn" or "." in entry.name:
                     continue  # records/methods: tracked via their record in v1
                 full = self.store.put(node)
+                if entry.source is not None:
+                    # Muninn Part 1: keep the author's original text so expand
+                    # can return comments + docstring, not just the IR.
+                    self.store.put_source(full, entry.source)
                 key = (str(f), entry.name)
                 prev = self._lift_index.get(key)
                 if prev == full:
@@ -129,7 +133,24 @@ class Harness:
                 f"Unknown expand form {form!r}. Remedy: use 'source' (readable "
                 "projection) or 'canonical' (the patchable data form)."
             )
-        return self._project(node)
+        # Muninn Part 1: a lifted, unpatched fn returns the author's ORIGINAL
+        # text — comments and docstring intact (the function's intent, in the
+        # author's words). A fn that exists only as a patched AST has no such
+        # record and returns a labeled canonical projection instead. Either
+        # branch is byte-identical for a given hash (R2).
+        original = self.store.source(full)
+        if original is not None:
+            return original
+        return self._project_labeled(node)
+
+    def _project_labeled(self, node: Node) -> str:
+        body = self._project(node)
+        if isinstance(node, Fn) and isinstance(node.body, HostBlock):
+            # The lossy case Muninn flags: a host fn with no original-source
+            # record. Mark the projection in-band so it is never mistaken for
+            # the author's text. ASCII only (D-039: machine-facing output).
+            return "# projected from canonical form -- original comments not preserved\n" + body
+        return body
 
     def _project(self, node: Node) -> str:
         if isinstance(node, Fn):
